@@ -334,9 +334,9 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         uint8[3] memory indexes = generateIndexes(msg.sender);
 
         oracles[msg.sender] = Oracle({
-                                        isRegistered: true,
-                                        indexes: indexes
-                                    });
+            isRegistered: true,
+            indexes: indexes
+        });
     }
 
     function getMyIndexes
