@@ -26,10 +26,16 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
 
     string private constant ERROR_CONTRACT_NOT_OPERATIONAL = "ERROR_CONTRACT_NOT_OPERATIONAL";
+    string private constant ERROR_NO_QUORUM = "ERROR_NO_QUORUM";
+
     string private constant ERROR_CALLER_NOT_CONTRACT_OWNER = "ERROR_CALLER_NOT_CONTRACT_OWNER";
     string private constant ERROR_AIRLINE_IS_NOT_REGISTERED = "ERROR_AIRLINE_IS_NOT_REGISTERED";
     string private constant ERROR_AIRLINE_IS_ALREADY_REGISTERED = "ERROR_AIRLINE_IS_ALREADY_REGISTERED";
-    string private constant ERROR_AIRLINE_ALREADY_VOTED = "ERROR_AIRLINE_HAS_ALREADY_VOTED_FOR_THIS_AIRLINE";
+    string private constant ERROR_AIRLINE_ALREADY_VOTED_FOR_AIRLINE = "ERROR_AIRLINE_HAS_ALREADY_VOTED_FOR_THIS_AIRLINE";
+
+    string private constant ERROR_FLIGHT_IS_NOT_REGISTERED = "ERROR_FLIGHT_IS_NOT_REGISTERED";
+    string private constant ERROR_FLIGHT_IS_ALREADY_REGISTERED = "ERROR_FLIGHT_IS_ALREADY_REGISTERED";
+    string private constant ERROR_AIRLINE_ALREADY_VOTED_FOR_FLIGHT = "ERROR_AIRLINE_HAS_ALREADY_VOTED_FOR_THIS_FLIGHT";
 
 
     address private contractOwner;          // Account used to deploy contract
@@ -40,6 +46,12 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
 
     // Modifiers help avoid duplication of code. They are typically used to validate something
     // before a function is allowed to be executed.
+
+    modifier requireHasQuorum()
+    {
+        require(hasQuorum() == true, ERROR_NO_QUORUM);
+        _;
+    }
 
     /**
     * @dev Modifier that requires the "operational" boolean variable to be "true"
@@ -60,10 +72,20 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         _;
     }
 
-    modifier requireNotRegistered(address _airlineAddress)
+    modifier requireNonRegisteredAirline(address _airlineAddress)
     {
         Airline storage airline_ = airlines[_airlineAddress];
         require(airline_.isRegistered == false, ERROR_AIRLINE_IS_ALREADY_REGISTERED);
+        _;
+    }
+
+    modifier requireNonRegisteredFlight(
+        address     _airline,
+        string      _flight,
+        uint256     _date
+    )
+    {
+        require(isFlightRegistered(_airline, _flight, _date) == false, ERROR_FLIGHT_IS_ALREADY_REGISTERED);
         _;
     }
 
@@ -77,12 +99,17 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         _;
     }
 
-
-
-    modifier requireNotYetVoted(address _voter, address _votingFor)
+    modifier requireNotYetVotedAirlineXAirline(address _voter, address _votingFor)
     {
         Airline storage airline_ = airlines[_votingFor];
-        require(airline_.votedBy[_voter] == false, ERROR_AIRLINE_ALREADY_VOTED);
+        require(airline_.votedBy[_voter] == false, ERROR_AIRLINE_ALREADY_VOTED_FOR_AIRLINE);
+        _;
+    }
+
+    modifier requireNotYetVotedAirlineXFlight(address _voter, bytes32 _votingForFlightId)
+    {
+        Flight storage flight_ = flights[_votingForFlightId];
+        require(flight_.votedBy[_voter] == false, ERROR_AIRLINE_ALREADY_VOTED_FOR_FLIGHT);
         _;
     }
 
@@ -124,8 +151,8 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     */
     function registerAirline(address _airlineAddress)
                             public
-                            canRegister()
-                            requireNotRegistered(_airlineAddress)
+                            canRegisterAirline()
+                            requireNonRegisteredAirline(_airlineAddress)
                             returns(bool success, uint256 votes, uint256 pendingVotes)
     {
         Airline storage airline_ = airlines[_airlineAddress];
@@ -138,7 +165,7 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
             }
         }
 
-        success = vote(airline_);
+        success = voteAirlineXAirline(airline_);
 
         return (success, airline_.votes, 0);
     }
@@ -153,9 +180,9 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     }
 
 
-    function vote(Airline storage _airline)
+    function voteAirlineXAirline(Airline storage _airline)
                             private
-                            requireNotYetVoted(msg.sender, _airline.id)
+                            requireNotYetVotedAirlineXAirline(msg.sender, _airline.id)
                             returns(bool isRegistered_)
     {
         _airline.votes += 1;
@@ -164,6 +191,47 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
             incorporateAirline(_airline);
             isRegistered_ = true;
         }
+    }
+
+    function registerFlight(
+        address     _airline,
+        string      _flight,
+        uint256     _date
+    )
+        public
+        requireHasQuorum()
+        canRegisterFlight()
+        requireNonRegisteredFlight(_airline, _flight, _date)
+        returns(bool success, uint256 votes, uint256 pendingVotes)
+    {
+        bytes32 flightId = getFlightKey(_airline, _flight, _date);
+        Flight storage flight_ = flights[flightId];
+        if (flight_.exists == false) {
+            flight_ = addFlight(_airline, _flight, _date, STATUS_CODE_UNKNOWN);
+        }
+
+        success = voteAirlineXFlight(flight_);
+
+        return (success, flight_.votes, 0);
+    }
+
+    function voteAirlineXFlight(Flight storage _flight)
+                            private
+                            requireNotYetVotedAirlineXFlight(msg.sender, _flight.Id)
+                            returns(bool isRegistered_)
+    {
+        _flight.votes += 1;
+        _flight.votedBy[msg.sender] = true;
+        if (consensus <= _flight.votes){
+            incorporateFlight(_flight);
+            isRegistered_ = true;
+        }
+    }
+
+    function incorporateFlight(Flight storage _flight)
+                            private
+    {
+        _flight.isRegistered = true;
     }
 
     /**
@@ -181,7 +249,8 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         contribute();
         Airline storage airline_ = airlines[msg.sender];
         if (airline_.contribution >= minimumContribution){
-            addPermission(REGISTRATION_ROLE, msg.sender, "");
+            addPermission(AIRLINE_REGISTRATION_ROLE, msg.sender, "");
+            addPermission(FLIGHT_REGISTRATION_ROLE, msg.sender, "");
         }
     }
 
@@ -196,18 +265,6 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         fund();
     }
 
-   /**
-    * @dev Register a future flight for insuring.
-    *
-    */
-    function registerFlight
-                                (
-                                )
-                                external
-                                pure
-    {
-
-    }
 
    /**
     * @dev Called after oracle has updated flight status
@@ -275,6 +332,36 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         votes_ = airline_.votes;
         isRegistered_ = airline_.isRegistered;
         contribution_ = airline_.contribution;
+    }
+
+    function fetchFlightSummary(bytes32 _flightId)
+    public
+    requireFlightExist(_flightId)
+    view returns
+    (
+        bytes32     Id_,
+        address     airline_,
+        string      flightNumber_,
+        uint256     date_,
+        bool        isRegistered_,
+        uint8       statusCode_,
+        uint256     updatedTimestamp_,
+        bool        exists_,
+        uint256     votes_,
+        bool        canBeInsured_
+    )
+    {
+        Flight storage flight_ = flights[_flightId];
+        Id_ = flight_.Id;
+        airline_ = flight_.airline;
+        flightNumber_ = flight_.flightNumber;
+        date_ = flight_.date;
+        isRegistered_ = flight_.isRegistered;
+        statusCode_ = flight_.statusCode;
+        updatedTimestamp_ = flight_.updatedTimestamp;
+        exists_ = flight_.exists;
+        votes_ = flight_.votes;
+        canBeInsured_ = flight_.canBeInsured;
     }
 
 // region ORACLE MANAGEMENT
@@ -359,14 +446,14 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     // and matches one of the three Indexes randomly assigned to the oracle at the
     // time of registration (i.e. uninvited oracles are not welcome)
     function submitOracleResponse
-                        (
-                            uint8 index,
-                            address airline,
-                            string flight,
-                            uint256 timestamp,
-                            uint8 statusCode
-                        )
-                        external
+    (
+        uint8 index,
+        address airline,
+        string flight,
+        uint256 timestamp,
+        uint8 statusCode
+    )
+    external
     {
         require((oracles[msg.sender].indexes[0] == index) || (oracles[msg.sender].indexes[1] == index) || (oracles[msg.sender].indexes[2] == index), "Index does not match oracle request");
 
@@ -389,26 +476,14 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     }
 
 
-    function getFlightKey
-                        (
-                            address airline,
-                            string flight,
-                            uint256 timestamp
-                        )
-                        pure
-                        internal
-                        returns(bytes32)
-    {
-        return keccak256(abi.encodePacked(airline, flight, timestamp));
-    }
 
     // Returns array of three non-duplicating integers from 0-9
     function generateIndexes
-                            (
-                                address account
-                            )
-                            internal
-                            returns(uint8[3])
+    (
+        address account
+    )
+    internal
+    returns(uint8[3])
     {
         uint8[3] memory indexes;
         indexes[0] = getRandomIndex(account);
@@ -428,11 +503,11 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
 
     // Returns array of three non-duplicating integers from 0-9
     function getRandomIndex
-                            (
-                                address account
-                            )
-                            internal
-                            returns (uint8)
+    (
+        address account
+    )
+    internal
+    returns (uint8)
     {
         uint8 maxValue = 10;
 

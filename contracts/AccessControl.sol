@@ -5,18 +5,25 @@ contract AccessControl{
     mapping (bytes32 => bool) internal roles;
     mapping (bytes32 => bool) internal permissions;
 
-    string private constant ERROR_MISSING_REGISTRATION_PERMISSION = "ERROR_MISSING_REGISTRATION_PERMISSION";
+    string private constant ERROR_MISSING_AIRLINE_REGISTRATION_PERMISSION = "ERROR_MISSING_AIRLINE_REGISTRATION_PERMISSION";
+    string private constant ERROR_MISSING_FLIGHT_REGISTRATION_PERMISSION = "ERROR_MISSING_FLIGHT_REGISTRATION_PERMISSION";
 
-    bytes32 public constant REGISTRATION_ROLE = keccak256("REGISTRATION_ROLE");
+    bytes32 public constant AIRLINE_REGISTRATION_ROLE = keccak256("AIRLINE_REGISTRATION_ROLE");
+    bytes32 public constant FLIGHT_REGISTRATION_ROLE = keccak256("FLIGHT_REGISTRATION_ROLE");
 
-    modifier canRegister() {
-        require(has(REGISTRATION_ROLE, msg.sender, ""), ERROR_MISSING_REGISTRATION_PERMISSION);
+    modifier canRegisterAirline() {
+        require(has(AIRLINE_REGISTRATION_ROLE, msg.sender, ""), ERROR_MISSING_AIRLINE_REGISTRATION_PERMISSION);
         _;
     }
 
+    modifier canRegisterFlight() {
+        require(has(FLIGHT_REGISTRATION_ROLE, msg.sender, ""), ERROR_MISSING_FLIGHT_REGISTRATION_PERMISSION);
+        _;
+    }
 
     constructor() public {
-        addRole(REGISTRATION_ROLE);
+        addRole(AIRLINE_REGISTRATION_ROLE);
+        addRole(FLIGHT_REGISTRATION_ROLE);
     }
 
     function roleHash(bytes32 _role) internal pure returns (bytes32) {

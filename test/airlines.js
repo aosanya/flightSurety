@@ -77,7 +77,7 @@ contract('Flight Surety App Tests', async (accounts) => {
           await config.flightSuretyApp.registerAirline(airline5, {from: airline4});
       }
       catch (error){
-          assert.isTrue(error.toString().includes("revert ERROR_MISSING_REGISTRATION_PERMISSION"), "Unexpected throw recieved")
+          assert.isTrue(error.toString().includes("revert ERROR_MISSING_AIRLINE_REGISTRATION_PERMISSION"), "Unexpected throw recieved")
           let summary2 = await config.flightSuretyApp.fetchAirlinesSummary();
           assert.equal(summary1.registered, summary2.registered, "airline count is wrong");
           return
@@ -102,7 +102,7 @@ contract('Flight Surety App Tests', async (accounts) => {
       }
     )
 
-    it(`Airline4 cannot register airline 5`, async function () {
+    it(`Airline4 cannot register airline 5 without consensus`, async function () {
           await config.flightSuretyApp.registerAirline(airline5, {from: airline4});
           isAirline = await config.flightSuretyApp.isAirline(airline5);
           assert.equal(isAirline, true, "airline not enlisted");

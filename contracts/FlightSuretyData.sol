@@ -11,15 +11,26 @@ contract FlightSuretyData {
 
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
+    uint256 consensus = 0;
+
+    /********************************************************************************************/
+    /*                                       SETTINGS                                           */
+    /********************************************************************************************/
     uint256 constant quorum = 4;
     uint256 constant minimumContribution = 10 ether;
     uint256 constant consensusPercentage = 50;
-    uint256 consensus = 0;
+    uint256 constant maximumPremium = 1 ether;
 
+    /********************************************************************************************/
+    /*                                       ERROR CODES                                        */
+    /********************************************************************************************/
     string private constant ERROR_AIRLINE_NOT_ENLISTED = "ERROR_AIRLINE_NOT_ENLISTED";
     string private constant ERROR_AIRLINE_ALREADY_ENLISTED = "ERROR_AIRLINE_ALREADY_ENLISTED";
     string private constant ERROR_AIRLINE_IS_NOT_REGISTERED = "ERROR_AIRLINE_IS_NOT_REGISTERED";
     string private constant ERROR_AIRLINE_IS_ALREADY_REGISTERED = "ERROR_AIRLINE_IS_ALREADY_REGISTERED";
+
+    string private constant ERROR_FLIGHT_NOT_ENLISTED = "ERROR_FLIGHT_NOT_ENLISTED";
+    string private constant ERROR_FLIGHT_ALREADY_ENLISTED = "ERROR_FLIGHT_ALREADY_ENLISTED";
 
     struct Airline {
         address id;
@@ -29,18 +40,32 @@ contract FlightSuretyData {
         bool isRegistered;
         uint256 contribution;
     }
-
     mapping (address => Airline) internal airlines;
     uint256 registered;
     uint256 registrationQueue;
 
     struct Flight {
-        bool isRegistered;
-        uint8 statusCode;
-        uint256 updatedTimestamp;
-        address airline;
+        bytes32     Id;
+        address     airline;
+        string      flightNumber;
+        uint256     date;
+        bool        isRegistered;
+        uint8       statusCode;
+        uint256     updatedTimestamp;
+        bool        exists;
+        uint256     votes;
+        bool        canBeInsured;
+        mapping (address => bool) votedBy;
     }
-    mapping(bytes32 => Flight) private flights;
+    mapping(bytes32 => Flight) internal flights;
+
+    struct Policy {
+        string   ticketNumber;
+        bytes32  flightId;
+        uint256  premium;
+        bool     isActive;
+    }
+
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
@@ -61,6 +86,8 @@ contract FlightSuretyData {
     // Modifiers help avoid duplication of code. They are typically used to validate something
     // before a function is allowed to be executed.
 
+
+
     modifier requireAirlineExist(address _who)
     {
         require(airlines[_who].exists == true, ERROR_AIRLINE_NOT_ENLISTED);
@@ -73,6 +100,22 @@ contract FlightSuretyData {
         _;  // All modifiers require an "_" which indicates where the function body will be added
     }
 
+    modifier requireFlightExist(
+        bytes32      _flightId
+    )
+    {
+        require(flights[_flightId].exists == true, ERROR_FLIGHT_NOT_ENLISTED);
+        _;
+    }
+
+    modifier requireFlightNotExist(
+        bytes32      _flightId
+    )
+    {
+        require(flights[_flightId].exists == false, ERROR_FLIGHT_NOT_ENLISTED);
+        _;
+    }
+
     modifier requireIsRegistered(address _airlineAddress)
     {
         Airline storage airline_ = airlines[_airlineAddress];
@@ -80,7 +123,7 @@ contract FlightSuretyData {
         _;
     }
 
-    modifier requireNotRegistered(address _airlineAddress)
+    modifier requireNonRegisteredAirline(address _airlineAddress)
     {
         Airline storage airline_ = airlines[_airlineAddress];
         require(airline_.isRegistered == false, ERROR_AIRLINE_IS_ALREADY_REGISTERED);
@@ -160,13 +203,40 @@ contract FlightSuretyData {
         return airline_;
     }
 
+    function addFlight(
+        address     _airline,
+        string      _flightNumber,
+        uint256     _date,
+        uint8       _statusCode
+    )
+        internal
+        requireAirlineExist(_airline)
+        returns(Flight storage flight_)
+    {
+        bytes32 flightId = getFlightKey(_airline, _flightNumber, _date);
+        flight_ = flights[flightId];
+        flight_.Id = flightId;
+        flight_.flightNumber = _flightNumber;
+        flight_.date = _date;
+        flight_.statusCode = _statusCode;
+        flight_.isRegistered = false;
+        flight_.airline = _airline;
+        flight_.exists = true;
+        flight_.canBeInsured = true;
+        return flight_;
+    }
+
    /**
     * @dev Buy insurance for a flight
     *
     */
     function buy
-                            (
-                            )
+        (
+        string   _ticketNumber;
+        bytes32  _flightId;
+        uint256  _premium;
+        bool     _isActive;
+        )
                             external
                             payable
     {
@@ -208,19 +278,17 @@ contract FlightSuretyData {
     }
 
     function getFlightKey
-                        (
-                            address airline,
-                            string memory flight,
-                            uint256 timestamp
-                        )
-                        pure
-                        internal
-                        returns(bytes32)
+    (
+        address airline,
+        string memory flight,
+        uint256 date
+    )
+    public
+    pure
+    returns(bytes32)
     {
-        return keccak256(abi.encodePacked(airline, flight, timestamp));
+        return keccak256(abi.encodePacked(airline, flight, date));
     }
-
-
 
     function isAirline(address _who)
                             public
@@ -231,5 +299,18 @@ contract FlightSuretyData {
     }
 
 
+
+    function isFlightRegistered(
+        address         _airline,
+        string memory   _flight,
+        uint256         _date
+    )
+        public
+        view
+        returns(bool)
+    {
+        bytes32 flightId_ = getFlightKey(_airline, _flight, _date);
+        return flights[flightId_].isRegistered;
+    }
 }
 
