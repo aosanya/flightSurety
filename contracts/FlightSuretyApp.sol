@@ -16,7 +16,6 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
-
     // Flight status codees
     uint8 private constant STATUS_CODE_UNKNOWN = 0;
     uint8 private constant STATUS_CODE_ON_TIME = 10;
@@ -179,11 +178,10 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         consensus = registered.mul(consensusPercentage).div(100);
     }
 
-
     function voteAirlineXAirline(Airline storage _airline)
-                            private
-                            requireNotYetVotedAirlineXAirline(msg.sender, _airline.id)
-                            returns(bool isRegistered_)
+        private
+        requireNotYetVotedAirlineXAirline(msg.sender, _airline.id)
+        returns(bool isRegistered_)
     {
         _airline.votes += 1;
         _airline.votedBy[msg.sender] = true;
@@ -251,7 +249,32 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         if (airline_.contribution >= minimumContribution){
             addPermission(AIRLINE_REGISTRATION_ROLE, msg.sender, "");
             addPermission(FLIGHT_REGISTRATION_ROLE, msg.sender, "");
+            addPermission(CLAIMS_PAYOUT_ROLE, msg.sender, "");
         }
+    }
+
+    event creditingInsuree(bytes32 policy);
+
+    /**
+    *  @dev Credits payouts to insurees
+    */
+    function creditInsurees
+    (
+        bytes32  _flightId
+    )
+    external
+    canPayoutClaims()
+    requireFlightExist(_flightId)
+    {
+
+        Flight storage flight_ = flights[_flightId];
+        require(flight_.statusCode > 10, ERROR_POLICY_CANNOT_CLAIM);
+        require(flight_.paidoutClaims == false, ERROR_ALREADY_PAIDOUT_CLAIMS);
+        for(uint i = 1 ; i <= flight_.policyCount; i++) {
+            emit creditingInsuree(flight_.policies[i]);
+            creditInsuree(flight_.policies[i]);
+        }
+        flight_.paidoutClaims = true;
     }
 
     /**
@@ -272,33 +295,52 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     */
     function processFlightStatus
     (
-        address         airline,
-        string memory   flight,
-        uint256         timestamp,
-        uint8           statusCode
+        address         _airline,
+        string memory   _flight,
+        uint256         _date,
+        uint256         _timestamp,
+        uint8           _statusCode
     )
     internal
-    pure
     {
+        bytes32 flightId = getFlightKey(_airline, _flight, _date);
+
+        Flight storage flight_ = flights[flightId];
+        flight_.statusCode = _statusCode;
+        flight_.updatedTimestamp = _timestamp;
     }
 
+
+    uint32 testIndex;
+    address testAirline;
+    string testFlight;
+    uint256 testDate;
+    uint256 testTimestamp;
 
     // Generate a request for oracles to fetch flight information
     function fetchFlightStatus
     (
-        address     airline,
-        string      flight,
-        uint256     timestamp
+        address     _airline,
+        string      _flight,
+        uint256     _date,
+        uint256     _timestamp
     )
     external
     {
-        uint8 index = getRandomIndex(msg.sender);
+        bytes32 flightId = getFlightKey(_airline, _flight, _date);
+        require(flights[flightId].exists == true, ERROR_FLIGHT_NOT_ENLISTED);
+        uint32 index_ = getRandomIndex(msg.sender);
 
         // Generate a unique key for storing the request
-        bytes32 key = keccak256(abi.encodePacked(index, airline, flight, timestamp));
+        bytes32 key = keccak256(abi.encodePacked(index_, _airline, _flight, _date, _timestamp));
         oracleResponses[key] = ResponseInfo({requester: msg.sender, isOpen: true});
 
-        emit OracleRequest(index, airline, flight, timestamp);
+        emit OracleRequest(index_, _airline, _flight, _date, _timestamp);
+        testIndex = index_;
+        testAirline = _airline;
+        testFlight = _flight;
+        testDate = _date;
+        testTimestamp = _timestamp;
     }
 
     function hasQuorum()  public view returns(bool hasQuorum_){
@@ -346,9 +388,10 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         bool        isRegistered_,
         uint8       statusCode_,
         uint256     updatedTimestamp_,
-        bool        exists_,
         uint256     votes_,
-        bool        canBeInsured_
+        bool        canBeInsured_,
+        uint256     policyCount_,
+        bool        paidoutClaims_
     )
     {
         Flight storage flight_ = flights[_flightId];
@@ -359,10 +402,38 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         isRegistered_ = flight_.isRegistered;
         statusCode_ = flight_.statusCode;
         updatedTimestamp_ = flight_.updatedTimestamp;
-        exists_ = flight_.exists;
         votes_ = flight_.votes;
         canBeInsured_ = flight_.canBeInsured;
+        policyCount_ = flight_.policyCount;
+        paidoutClaims_ = flight_.paidoutClaims;
     }
+
+    function fetchPolicySummary(bytes32 _policyId)
+    public
+    requirePolicyExist(_policyId)
+    view returns
+    (
+        bytes32  Id_,
+        address  insured_,
+        string   ticketNumber_,
+        bytes32  flightId_,
+        uint256  premium_,
+        uint256  payout_,
+        bool     isActive_,
+        bool     isWithdrawn_
+    )
+    {
+        Policy storage policy_ = policies[_policyId];
+        Id_ = policy_.Id;
+        insured_ = policy_.insured;
+        ticketNumber_ = policy_.ticketNumber;
+        flightId_ = policy_.flightId;
+        premium_ = policy_.premium;
+        payout_ = policy_.payout;
+        isActive_ = policy_.isActive;
+        isWithdrawn_ = policy_.isWithdrawn;
+    }
+
 
 // region ORACLE MANAGEMENT
 
@@ -378,7 +449,7 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
 
     struct Oracle {
         bool isRegistered;
-        uint8[3] indexes;
+        uint32[3] indexes;
     }
 
     // Track all registered oracles
@@ -398,15 +469,14 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     mapping(bytes32 => ResponseInfo) private oracleResponses;
 
     // Event fired each time an oracle submits a response
-    event FlightStatusInfo(address airline, string flight, uint256 timestamp, uint8 status);
+    event FlightStatusInfo(address airline, string flight, uint256 date, uint256 timestamp, uint8 status);
 
-    event OracleReport(address airline, string flight, uint256 timestamp, uint8 status);
+    event OracleReport(address airline, string flight, uint256 date, uint256 timestamp, uint8 status);
 
     // Event fired when flight status request is submitted
     // Oracles track this and if they have a matching index
     // they fetch data and submit a response
-    event OracleRequest(uint8 index, address airline, string flight, uint256 timestamp);
-
+    event OracleRequest(uint32 index, address airline, string flight, uint256 date, uint256 timestamp);
 
     // Register an oracle with the contract
     function registerOracle
@@ -418,7 +488,7 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         // Require registration fee
         require(msg.value >= REGISTRATION_FEE, "Registration fee is required");
 
-        uint8[3] memory indexes = generateIndexes(msg.sender);
+        uint32[3] memory indexes = generateIndexes(msg.sender);
 
         oracles[msg.sender] = Oracle({
             isRegistered: true,
@@ -429,17 +499,14 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     function getMyIndexes
                             (
                             )
-                            view
                             external
-                            returns(uint8[3])
+                            view
+                            returns(uint32[3])
     {
         require(oracles[msg.sender].isRegistered, "Not registered as an oracle");
 
         return oracles[msg.sender].indexes;
     }
-
-
-
 
     // Called by oracle when a response is available to an outstanding request
     // For the response to be accepted, there must be a pending request that is open
@@ -447,31 +514,31 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     // time of registration (i.e. uninvited oracles are not welcome)
     function submitOracleResponse
     (
-        uint8 index,
+        uint32 _index,
         address airline,
         string flight,
+        uint256 date,
         uint256 timestamp,
         uint8 statusCode
     )
     external
     {
-        require((oracles[msg.sender].indexes[0] == index) || (oracles[msg.sender].indexes[1] == index) || (oracles[msg.sender].indexes[2] == index), "Index does not match oracle request");
+        require((oracles[msg.sender].indexes[0] == _index) || (oracles[msg.sender].indexes[1] == _index) || (oracles[msg.sender].indexes[2] == _index), "Index does not match oracle request");
 
-
-        bytes32 key = keccak256(abi.encodePacked(index, airline, flight, timestamp));
+        bytes32 key = keccak256(abi.encodePacked(_index, airline, flight, date, timestamp));
         require(oracleResponses[key].isOpen, "Flight or timestamp do not match oracle request");
 
         oracleResponses[key].responses[statusCode].push(msg.sender);
 
         // Information isn't considered verified until at least MIN_RESPONSES
         // oracles respond with the *** same *** information
-        emit OracleReport(airline, flight, timestamp, statusCode);
+        emit OracleReport(airline, flight, date, timestamp,  statusCode);
         if (oracleResponses[key].responses[statusCode].length >= MIN_RESPONSES) {
 
-            emit FlightStatusInfo(airline, flight, timestamp, statusCode);
+            emit FlightStatusInfo(airline, flight, date, timestamp, statusCode);
 
             // Handle flight status as appropriate
-            processFlightStatus(airline, flight, timestamp, statusCode);
+            processFlightStatus(airline, flight, date, timestamp, statusCode);
         }
     }
 
@@ -483,9 +550,9 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         address account
     )
     internal
-    returns(uint8[3])
+    returns(uint32[3])
     {
-        uint8[3] memory indexes;
+        uint32[3] memory indexes;
         indexes[0] = getRandomIndex(account);
 
         indexes[1] = indexes[0];
@@ -507,9 +574,9 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         address account
     )
     internal
-    returns (uint8)
+    returns (uint32)
     {
-        uint8 maxValue = 10;
+        uint32 maxValue = 5;
 
         // Pseudo random number...the incrementing nonce adds variation
         uint8 random = uint8(uint256(keccak256(abi.encodePacked(blockhash(block.number - nonce++), account))) % maxValue);

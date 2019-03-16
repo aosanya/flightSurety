@@ -7,9 +7,11 @@ contract AccessControl{
 
     string private constant ERROR_MISSING_AIRLINE_REGISTRATION_PERMISSION = "ERROR_MISSING_AIRLINE_REGISTRATION_PERMISSION";
     string private constant ERROR_MISSING_FLIGHT_REGISTRATION_PERMISSION = "ERROR_MISSING_FLIGHT_REGISTRATION_PERMISSION";
+    string private constant ERROR_MISSING_CLAIMS_PAYOUT_ROLE = "ERROR_MISSING_CLAIMS_PAYOUT_ROLE";
 
     bytes32 public constant AIRLINE_REGISTRATION_ROLE = keccak256("AIRLINE_REGISTRATION_ROLE");
     bytes32 public constant FLIGHT_REGISTRATION_ROLE = keccak256("FLIGHT_REGISTRATION_ROLE");
+    bytes32 public constant CLAIMS_PAYOUT_ROLE = keccak256("CLAIMS_PAYOUT_ROLE");
 
     modifier canRegisterAirline() {
         require(has(AIRLINE_REGISTRATION_ROLE, msg.sender, ""), ERROR_MISSING_AIRLINE_REGISTRATION_PERMISSION);
@@ -21,9 +23,15 @@ contract AccessControl{
         _;
     }
 
+    modifier canPayoutClaims() {
+        require(has(CLAIMS_PAYOUT_ROLE, msg.sender, ""), ERROR_MISSING_CLAIMS_PAYOUT_ROLE);
+        _;
+    }
+
     constructor() public {
         addRole(AIRLINE_REGISTRATION_ROLE);
         addRole(FLIGHT_REGISTRATION_ROLE);
+        addRole(CLAIMS_PAYOUT_ROLE);
     }
 
     function roleHash(bytes32 _role) internal pure returns (bytes32) {

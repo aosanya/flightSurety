@@ -29,16 +29,30 @@ contract FlightSuretyData {
     string private constant ERROR_AIRLINE_IS_NOT_REGISTERED = "ERROR_AIRLINE_IS_NOT_REGISTERED";
     string private constant ERROR_AIRLINE_IS_ALREADY_REGISTERED = "ERROR_AIRLINE_IS_ALREADY_REGISTERED";
 
-    string private constant ERROR_FLIGHT_NOT_ENLISTED = "ERROR_FLIGHT_NOT_ENLISTED";
+    string internal constant ERROR_FLIGHT_NOT_ENLISTED = "ERROR_FLIGHT_NOT_ENLISTED";
     string private constant ERROR_FLIGHT_ALREADY_ENLISTED = "ERROR_FLIGHT_ALREADY_ENLISTED";
+
+    string private constant ERROR_FLIGHT_CANNOT_BE_INSURED = "ERROR_FLIGHT_CANNOT_BE_INSURED";
+    string private constant ERROR_MAXIMUM_PREMIUM_PAID = "ERROR_MAXIMUM_PREMIUM_PAID";
+
+    string private constant ERROR_PURCHASE_VALUE_IS_0 = "ERROR_PURCHASE_VALUE_IS_0";
+    string private constant ERROR_POLICY_DOES_NOT_EXIST = "ERROR_POLICY_DOES_NOT_EXIST";
+    string internal constant ERROR_POLICY_CANNOT_CLAIM = "ERROR_POLICY_CANNOT_CLAIM";
+    string private constant ERROR_ALREADY_PAIDOUT_CLAIM = "ERROR_ALREADY_PAIDOUT_CLAIM";
+    string internal constant ERROR_ALREADY_PAIDOUT_CLAIMS = "ERROR_ALREADY_PAIDOUT_CLAIMS";
+    string internal constant ERROR_POLICY_HAS_NO_PAYOUT = "ERROR_POLICY_HAS_NO_PAYOUT";
+    string internal constant ERROR_NOT_POLICY_OWNER = "ERROR_NOT_POLICY_OWNER";
+
+    string internal constant ERROR_CLAIM_IS_ALREADY_WITHDRAWN = "ERROR_CLAIM_IS_ALREADY_WITHDRAWN";
+
 
     struct Airline {
         address id;
         uint256 votes;
         mapping (address => bool) votedBy;
-        bool exists;
         bool isRegistered;
         uint256 contribution;
+        bool exists;
     }
     mapping (address => Airline) internal airlines;
     uint256 registered;
@@ -52,19 +66,28 @@ contract FlightSuretyData {
         bool        isRegistered;
         uint8       statusCode;
         uint256     updatedTimestamp;
-        bool        exists;
         uint256     votes;
         bool        canBeInsured;
-        mapping (address => bool) votedBy;
+        mapping     (address => bool) votedBy;
+        mapping     (uint256 => bytes32) policies;
+        uint256     policyCount;
+        bool        paidoutClaims;
+        bool        exists;
     }
     mapping(bytes32 => Flight) internal flights;
 
     struct Policy {
+        bytes32  Id;
+        address  insured;
         string   ticketNumber;
         bytes32  flightId;
         uint256  premium;
+        uint256  payout;
         bool     isActive;
+        bool     isWithdrawn;
+        bool     exists;
     }
+    mapping(bytes32 => Policy) internal policies;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -85,8 +108,6 @@ contract FlightSuretyData {
 
     // Modifiers help avoid duplication of code. They are typically used to validate something
     // before a function is allowed to be executed.
-
-
 
     modifier requireAirlineExist(address _who)
     {
@@ -127,6 +148,21 @@ contract FlightSuretyData {
     {
         Airline storage airline_ = airlines[_airlineAddress];
         require(airline_.isRegistered == false, ERROR_AIRLINE_IS_ALREADY_REGISTERED);
+        _;
+    }
+
+    modifier requireFlightCanBeInsured(bytes32 _flightId)
+    {
+        Flight storage flight_ = flights[_flightId];
+        require(flight_.canBeInsured == true, ERROR_FLIGHT_CANNOT_BE_INSURED);
+        _;
+    }
+
+    modifier requirePolicyExist(
+        bytes32      _policyId
+    )
+    {
+        require(policies[_policyId].exists == true, ERROR_POLICY_DOES_NOT_EXIST);
         _;
     }
 
@@ -223,6 +259,7 @@ contract FlightSuretyData {
         flight_.airline = _airline;
         flight_.exists = true;
         flight_.canBeInsured = true;
+        flight_.paidoutClaims = false;
         return flight_;
     }
 
@@ -230,41 +267,74 @@ contract FlightSuretyData {
     * @dev Buy insurance for a flight
     *
     */
-    function buy
-        (
-        string   _ticketNumber;
-        bytes32  _flightId;
-        uint256  _premium;
-        bool     _isActive;
-        )
-                            external
-                            payable
+    function buy(
+        bytes32  _flightId,
+        string   _ticketNumber
+    )
+        public
+        requireFlightCanBeInsured(_flightId)
+        payable
     {
+        require(msg.value > 0, ERROR_PURCHASE_VALUE_IS_0);
+        bytes32 key = getPolicyKey(_flightId, _ticketNumber);
+        Policy storage policy_ = policies[key];
+        require(policy_.premium < maximumPremium, ERROR_MAXIMUM_PREMIUM_PAID);
+        uint256 maxPayablePremium = maximumPremium - policy_.premium;
 
+        policy_.Id = key;
+        policy_.ticketNumber = _ticketNumber;
+        policy_.flightId = _flightId;
+        policy_.insured = msg.sender;
+        if (msg.value > maxPayablePremium){
+            policy_.premium += maxPayablePremium;
+            msg.sender.transfer(msg.value - maxPayablePremium); //refund excess
+        }
+        else{
+            policy_.premium += msg.value;
+        }
+        policy_.payout = 0;
+        policy_.isActive = false;
+        policy_.isWithdrawn = false;
+
+        if (policy_.exists == false){
+            Flight storage flight_ = flights[_flightId];
+            flight_.policies[flight_.policyCount + 1] = key;
+            flight_.policyCount++;
+        }
+
+        policy_.exists = true;
     }
 
-    /**
-     *  @dev Credits payouts to insurees
-    */
-    function creditInsurees
-                                (
-                                )
-                                external
-                                pure
+    function creditInsuree
+    (
+        bytes32  _policyId
+    )
+    internal
     {
+        Policy storage policy_ = policies[_policyId];
+        require(policy_.exists, ERROR_POLICY_DOES_NOT_EXIST);
+        require(policy_.payout == 0, ERROR_ALREADY_PAIDOUT_CLAIM);
+        policy_.payout = policy_.premium.mul(3).div(2);
     }
-
 
     /**
      *  @dev Transfers eligible payout funds to insuree
      *
     */
     function pay
-                            (
-                            )
-                            external
-                            pure
+    (
+        bytes32  _policyId
+    )
+        external
     {
+        Policy storage policy_ = policies[_policyId];
+        require(policy_.exists, ERROR_POLICY_DOES_NOT_EXIST);
+        require(policy_.insured == msg.sender, ERROR_NOT_POLICY_OWNER);
+        require(policy_.payout > 0, ERROR_POLICY_HAS_NO_PAYOUT);
+        require(policy_.isWithdrawn == false, ERROR_CLAIM_IS_ALREADY_WITHDRAWN);
+        policy_.isWithdrawn = true;
+        msg.sender.transfer(policy_.payout);
+
     }
 
 
@@ -290,6 +360,18 @@ contract FlightSuretyData {
         return keccak256(abi.encodePacked(airline, flight, date));
     }
 
+    function getPolicyKey
+    (
+        bytes32 flightId,
+        string  ticketNumber
+    )
+    public
+    pure
+    returns(bytes32)
+    {
+        return keccak256(abi.encodePacked(flightId, ticketNumber));
+    }
+
     function isAirline(address _who)
                             public
                             view
@@ -297,8 +379,6 @@ contract FlightSuretyData {
     {
         return airlines[_who].exists;
     }
-
-
 
     function isFlightRegistered(
         address         _airline,
