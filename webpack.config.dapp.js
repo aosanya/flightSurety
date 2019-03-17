@@ -1,11 +1,14 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const webpack = require("webpack");
+
 
 module.exports = {
   entry: ['babel-polyfill', path.join(__dirname, "src/dapp")],
   output: {
     path: path.join(__dirname, "prod/dapp"),
-    filename: "bundle.js"
+    filename: "bundle.js",
+    publicPath: '/'
   },
   module: {
     rules: [
@@ -32,7 +35,12 @@ module.exports = {
     ]
   },
   plugins: [
-    new HtmlWebpackPlugin({ 
+    new webpack.ProvidePlugin({
+        $ : "jquery",
+        Backbone : "backbone",
+        _ : "underscore"
+    }),
+    new HtmlWebpackPlugin({
       template: path.join(__dirname, "src/dapp/index.html")
     })
   ],

@@ -7,7 +7,7 @@ body {
 .container {
     margin-top: 400px;
     background-color: #000;
-    opacity: 0.9;
+    opacity: 0.95;
     color: #fff;
     padding: 40px;
 }
@@ -38,5 +38,50 @@ label.form {
     margin-right: 20px;
 }
 input {
-    margin-right: 30px;
+    width: 80%;
+    padding: 12px 20px;
+    margin: 10px 0;
 }
+
+
+button {
+    cursor: pointer;
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    background-color: #111;
+    font-size: 16px;
+    padding: 16px 32px;
+    text-decoration: none;
+    margin: 4px 10px;
+    margin-left: 0px;
+    margin-right: 10px;
+    border: 1px solid #333;
+    border-radius: 1px;
+}
+
+button:hover {
+  padding: 18px 32px;
+}
+
+button:focus {
+  padding: 18px 33px;
+}
+
+.row {
+    margin: 0 auto;
+    align-items: center;
+    justify-content: center;
+}
+.form {
+    width: 100%;
+    width:70%;
+    padding: 10px;
+    margin: 0 auto;
+    cursor: pointer;
+  }
+
+  .form-group {
+    padding:30px;
+    border-radius: 4px;
+  }
