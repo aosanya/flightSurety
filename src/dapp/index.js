@@ -1,74 +1,31 @@
-
-//import DOM from './dom';
-import Contract from './contract';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { BrowserRouter, Switch, Route } from 'react-router-dom';
+import  Home from "./components/home"
+import  Register from "./components/airline/register"
+import  LoadContract from "./components/contract/loadContract"
+import Nav from "./components/nav"
 import './flightsurety.css';
-import airlineSummary from './static/templates/airlineSummary'
-import home from './static/templates/home'
-import loadContract from "./static/templates/loadContract";
-
-
-import Backbone from 'backbone';
-import $ from 'jquery';
-
-import Router from './router';
-
-$(() => {
-  new Router();
-
-  Backbone.history.start();
-});
-
-// (async() => {
-
-//     let result = null;
-//     loadTemplate(loadContract());
-//     // let contract = new Contract('localhost', () => {
-
-//     //     // Read transaction
-//     //     contract.isOperational((error, result) => {
-//     //         console.log(error,result);
-//     //         display('Operational Status', 'Check if contract is operational', [ { label: 'Operational Status', error: error, value: result} ]);
-//     //     });
-
-
-//     //     // User-submitted transaction
-//     //     DOM.elid('submit-oracle').addEventListener('click', () => {
-//     //         let flight = DOM.elid('flight-number').value;
-//     //         // Write transaction
-//     //         contract.fetchFlightStatus(flight, (error, result) => {
-//     //             display('Oracles', 'Trigger oracles', [ { label: 'Fetch Flight Status', error: error, value: result.flight + ' ' + result.timestamp} ]);
-//     //         });
-//     //     })
-
-//     // });
-
-
-
-// })();
-
-// function loadTemplate(template) {
-//     $("[name='display-wrapper']").empty();
-//     $("[name='display-wrapper']").append(template);
-// }
-
-// // function display(title, description, results) {
-// //     let displayDiv = DOM.elid("display-wrapper");
-// //     let section = DOM.section();
-// //     section.appendChild(DOM.h2(title));
-// //     section.appendChild(DOM.h5(description));
-// //     results.map((result) => {
-// //         let row = section.appendChild(DOM.div({className:'row'}));
-// //         row.appendChild(DOM.div({className: 'col-sm-4 field'}, result.label));
-// //         row.appendChild(DOM.div({className: 'col-sm-8 field-value'}, result.error ? String(result.error) : String(result.value)));
-// //         section.appendChild(row);
-// //     })
-// //     displayDiv.append(section);
-
-// // }
-
-
-
-
-
-
-
+import Contract from '../../utils/contract';
+class App extends React.Component {
+    constructor( props ) {
+        super( props );
+    }
+    render() {
+        return(
+            <BrowserRouter>
+                <Nav/>
+                <div className="content">
+                    <Switch  >
+                        <Route exact path="/" component={ Home } />
+                        <Route exact path="/loadcontract" component={ LoadContract } />
+                        <Route path="/airline/register" component={ Register } />
+                        <Route path="/passenger/buyInsurance" component={ Register } />
+                    </Switch>
+                </div>
+            </BrowserRouter>
+        );
+    }
+}
+// render inside `app-root` element
+ReactDOM.render( <App />, document.getElementById( 'app-root' ) );

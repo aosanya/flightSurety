@@ -1,15 +1,25 @@
+html {
+    height: 100%;
+}
+
 body {
     background-image: url('flight.jpg'); /* Source: iStockPhoto */
     background-repeat: no-repeat;
     background-size: cover;
+    display: flex;
+    height: 90%;
 }
 
 .container {
-    margin-top: 400px;
+    margin-top: 50px;
     background-color: #000;
-    opacity: 0.95;
+    opacity: 0.9;
     color: #fff;
-    padding: 40px;
+    padding: 0 40px 40px 40px;
+}
+
+.content {
+    margin-bottom: 100px;
 }
 
 .top-20 {
@@ -21,7 +31,7 @@ h5 {
 }
 
 section {
-    margin-bottom: 50px;
+    margin-bottom: 100px;
 }
 
 .field {
@@ -44,7 +54,7 @@ input {
 }
 
 
-button {
+.button {
     cursor: pointer;
     background-color: #4CAF50;
     border: none;
@@ -60,11 +70,11 @@ button {
     border-radius: 1px;
 }
 
-button:hover {
+.button:hover {
   padding: 18px 32px;
 }
 
-button:focus {
+.button:focus {
   padding: 18px 33px;
 }
 
@@ -72,6 +82,7 @@ button:focus {
     margin: 0 auto;
     align-items: center;
     justify-content: center;
+    padding: 30px 0 0 0;
 }
 .form {
     width: 100%;
@@ -85,3 +96,87 @@ button:focus {
     padding:30px;
     border-radius: 4px;
   }
+
+  a {
+    text-decoration: none;
+    color: #eee;
+  }
+
+  a:hover {
+    text-decoration: none;
+    color: #ccc;
+  }
+
+  .center {
+    text-align: center;
+  }
+
+  .active {
+    font-weight: bold;
+  }
+
+
+  ul {
+    padding-left: 0;
+  }
+
+  li {
+    list-style-type: none;
+    padding: 10px;
+    text-decoration: none;
+  }
+
+  h3{
+      font-size: 1.17em;
+  }
+
+
+
+
+
+  /*  */
+
+  .nav {
+    overflow: hidden;
+    /* background-color: #111; */
+  }
+
+
+  .nav li {
+    display: block;
+    transition-duration: 0.5s;
+    padding: 10px;
+    text-decoration: none;
+   }
+
+   .nav li:hover {
+     cursor: pointer;
+   }
+
+   .nav ul li ul {
+     visibility: hidden;
+     opacity: 0;
+     position: absolute;
+     transition: all 0.5s ease;
+     background-color: #111;
+     /* margin-top: 1rem;
+      */
+     /* left: 0; */
+     display: none;
+   }
+
+   .nav  ul li:hover > ul,
+   .nav  ul li ul:hover {
+     visibility: visible;
+     opacity: 1;
+     display: block;
+     min-width: 150px;
+   }
+
+   .nav ul li ul li {
+     clear: both;
+     width: 100%;
+   }
+
+
+  /*  */

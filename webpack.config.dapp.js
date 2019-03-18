@@ -4,18 +4,27 @@ const webpack = require("webpack");
 
 
 module.exports = {
-  entry: ['babel-polyfill', path.join(__dirname, "src/dapp")],
+  entry: './src/dapp/index.js',
   output: {
     path: path.join(__dirname, "prod/dapp"),
     filename: "bundle.js",
-    publicPath: '/'
+    chunkFilename: '[name].js',
+    publicPath: "/"
   },
   module: {
     rules: [
-    {
-        test: /\.(js|jsx)$/,
-        use: "babel-loader",
-        exclude: /node_modules/
+      {
+          test: /\.jsx?$/,         // Match both .js and .jsx files
+          exclude: /node_modules/,
+          loader: "babel-loader",
+          query:
+            {
+              presets:['react']
+            }
+      },
+      {
+          test: /\.scss$/,
+          use: ['style-loader', 'css-loader', 'postcss-loader', 'sass-loader']
       },
       {
         test: /\.css$/,
@@ -27,19 +36,9 @@ module.exports = {
           'file-loader'
         ]
       },
-      {
-        test: /\.html$/,
-        use: "html-loader",
-        exclude: /node_modules/
-      }
     ]
   },
   plugins: [
-    new webpack.ProvidePlugin({
-        $ : "jquery",
-        Backbone : "backbone",
-        _ : "underscore"
-    }),
     new HtmlWebpackPlugin({
       template: path.join(__dirname, "src/dapp/index.html")
     })
@@ -49,7 +48,9 @@ module.exports = {
   },
   devServer: {
     contentBase: path.join(__dirname, "dapp"),
-    port: 8000,
-    stats: "minimal"
+    port: 8094,
+    stats: "minimal",
+    // must be `true` for SPAs
+    historyApiFallback: true,
   }
 };
