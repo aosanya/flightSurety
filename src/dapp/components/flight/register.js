@@ -1,33 +1,50 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import DateTimePicker from 'react-datetime-picker';
 
 class Register extends Component {
   constructor( props ) {
     super( props );
     this.state = {
-      address : "",
+      airlineAddress : "0x627306090abaB3A6e1400e9345bC60c78a8BEf57",
+      flightNumber : "A1 1000",
+      dateTime : new Date(2019,0,1,8,0),
       actionCalled : false,
       results : {}
     }
   }
 
   handleChangeAddress(e){
-    const address = e.target.value
+    const airlineAddress = e.target.value
 
     this.setState(() => {
-      return {address : address}
+      return {airlineAddress : airlineAddress}
     })
   }
 
-  handleRegisterAirline (e){
+  handleChangeFlightNumber(e){
+    const flightNumber = e.target.value
+
+    this.setState(() => {
+      return {flightNumber : flightNumber}
+    })
+  }
+
+  handleDateTimeChange(date){
+    this.setState(() => {
+      return {dateTime : date}
+    })
+  }
+
+  handleRegisterFlight (e){
     e.preventDefault()
-    this.props.contractApp.registerAirline(this.props.contractAddress, this.registerAirlineCallback.bind(this), this.state.address)
+    this.props.contractApp.registerFlight(this.props.contractAddress, this.registerFlightCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime / 1000)
   }
 
   handleRegisterAnother (e){
     e.preventDefault()
     this.setState(() => {
-      return {address : "", actionCalled : false, results : {}}
+      return {airlineAddress : "", flightNumber : "", dateTime : new Date(), actionCalled : false, results : {}}
     })
   }
 
@@ -38,7 +55,7 @@ class Register extends Component {
     })
   }
 
-  registerAirlineCallback (results){
+  registerFlightCallback (results){
     this.setState(() => {
       return {actionCalled : true, results : results}
     })
@@ -46,7 +63,6 @@ class Register extends Component {
 
   render() {
     const {results} = this.state;
-
     if (this.state.actionCalled == false){
       return (
         <div>
@@ -55,11 +71,26 @@ class Register extends Component {
               <br/>
               <input
                 type="text"
-                defaultValue={this.state.address}
+                defaultValue={this.state.airlineAddress}
                 onChange={this.handleChangeAddress.bind(this)}
               />
               <br/>
-              <button className="button" onClick={this.handleRegisterAirline.bind(this)}>
+              Flight Number
+              <br/>
+              <input
+                type="text"
+                defaultValue={this.state.flightNumber}
+                onChange={this.handleChangeFlightNumber.bind(this)}
+              />
+              <br/>
+              Flight Date and Time
+              <br/>
+              <DateTimePicker
+                onChange={this.handleDateTimeChange.bind(this)}
+                value={this.state.dateTime}
+              />
+              <br/>
+              <button className="button" onClick={this.handleRegisterFlight.bind(this)}>
                   Register
               </button>
               <br/>
@@ -96,3 +127,4 @@ function mapStateToProps ({ contract }) {
 }
 
 export default connect(mapStateToProps)(Register)
+

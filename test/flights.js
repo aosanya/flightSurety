@@ -79,7 +79,8 @@ contract('Flight Surety App Tests', async (accounts) => {
       isFlightRegistered = await config.flightSuretyApp.isFlightRegistered(airline1, flight1.flightNumber, flight1.time, {from: airline2} );
       assert.equal(isFlightRegistered, true, "flight should be registered");
 
-
+      let flightKey = await config.flightSuretyApp.getFlightKey(airline1, flight1.flightNumber, flight1.time, {from: airline2});
+      console.log(flightKey)
     });
 
 

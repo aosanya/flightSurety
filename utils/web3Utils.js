@@ -8503,18 +8503,18 @@ module.exports = TruffleSchema;
 }));
 },{}],18:[function(require,module,exports){
 ;(function (root, factory, undef) {
-	if (typeof exports === "object") {
-		// CommonJS
-		module.exports = exports = factory(require("./core"), require("./x64-core"));
-	}
-	else if (typeof define === "function" && define.amd) {
-		// AMD
-		define(["./core", "./x64-core"], factory);
-	}
-	else {
-		// Global (browser)
-		factory(root.CryptoJS);
-	}
+	// if (typeof exports === "object") {
+	// 	// CommonJS
+	// 	module.exports = exports = factory(require("./core"), require("./x64-core"));
+	// }
+	// else if (typeof define === "function" && define.amd) {
+	// 	// AMD
+	// 	define(["./core", "./x64-core"], factory);
+	// }
+	// else {
+	// 	// Global (browser)
+	// 	factory(root.CryptoJS);
+	// }
 }(this, function (CryptoJS) {
 
 	(function (Math) {
@@ -8827,18 +8827,18 @@ module.exports = TruffleSchema;
 }));
 },{"./core":17,"./x64-core":19}],19:[function(require,module,exports){
 ;(function (root, factory) {
-	if (typeof exports === "object") {
-		// CommonJS
-		module.exports = exports = factory(require("./core"));
-	}
-	else if (typeof define === "function" && define.amd) {
-		// AMD
-		define(["./core"], factory);
-	}
-	else {
-		// Global (browser)
-		factory(root.CryptoJS);
-	}
+	// if (typeof exports === "object") {
+	// 	// CommonJS
+	// 	module.exports = exports = factory(require("./core"));
+	// }
+	// else if (typeof define === "function" && define.amd) {
+	// 	// AMD
+	// 	define(["./core"], factory);
+	// }
+	// else {
+	// 	// Global (browser)
+	// 	factory(root.CryptoJS);
+	// }
 }(this, function (CryptoJS) {
 
 	(function (undefined) {

@@ -7,7 +7,7 @@ body {
     background-repeat: no-repeat;
     background-size: cover;
     display: flex;
-    height: 90%;
+    height: 100%;
 }
 
 .container {
@@ -19,7 +19,7 @@ body {
 }
 
 .content {
-    margin-bottom: 100px;
+    /* margin-bottom: 100px; */
 }
 
 .top-20 {
@@ -53,6 +53,11 @@ input {
     margin: 10px 0;
 }
 
+input.currency {
+  width: 200px;
+  padding: 12px 20px;
+  margin: 10px 0;
+}
 
 .button {
     cursor: pointer;
@@ -63,7 +68,7 @@ input {
     font-size: 16px;
     padding: 16px 32px;
     text-decoration: none;
-    margin: 4px 10px;
+    margin: 10px 10px;
     margin-left: 0px;
     margin-right: 10px;
     border: 1px solid #333;
@@ -93,8 +98,9 @@ input {
   }
 
   .form-group {
-    padding:30px;
+    padding : 30px 0 0 0;
     border-radius: 4px;
+    min-width: 60%;
   }
 
   a {
@@ -107,8 +113,51 @@ input {
     color: #ccc;
   }
 
+  .detail {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #dad7d7;
+  }
+
+  .detailTitle {
+    width: 40%;
+    padding: 0px 5px;
+    margin: 8px 20px;
+  }
+
+  .detailInfo {
+    margin: 8px 20px;
+  }
+
   .center {
     text-align: center;
+  }
+
+  .left {
+    text-align: left;
+  }
+
+  .center-div {
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      display: -webkit-box;
+      display: -moz-box;
+      display: -ms-flexbox;
+      display: -webkit-flex;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+
+  .auto-width
+  {
+    width: auto;
+  }
+
+  .div-100
+  {
+    width: 100%;
   }
 
   .active {
@@ -130,9 +179,22 @@ input {
       font-size: 1.17em;
   }
 
+  .Info {
+    word-wrap: break-word;
+  }
 
+  .success {
+    color: #228B22;
+  }
 
+  .warning {
+    color: rgb(255, 0, 0);
+  }
 
+  .details{
+    width: 100%;
+    margin: 10px;
+  }
 
   /*  */
 
@@ -179,4 +241,17 @@ input {
    }
 
 
+   .react-datetime-picker__wrapper {
+    background-color:  white;
+    padding-top: 0px;
+    padding-bottom: 12px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin: 10px 0;
+    color: black;
+   }
+
+   .react-datetime-picker__button:enabled {
+    padding-top: 20px;
+   }
   /*  */
