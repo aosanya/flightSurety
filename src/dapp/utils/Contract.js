@@ -11,6 +11,7 @@ export default class ContractApp {
         // this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
         // this.initialize(callback);
         this.contract = null;
+        this.contractInstance = null;
         this.contracts = {};
         this.web3Provider = null;
         this.web3 = null;
@@ -51,6 +52,7 @@ export default class ContractApp {
         await this.getMetaskAccountID(callback);
         await this.initContract(callback);
         await this.initializeDemo()
+
         callback(this)
     }
 
@@ -117,7 +119,9 @@ export default class ContractApp {
     }
 
     async createNewContract(callback) {
+        const contractSetter = this.setContract.bind(this)
         this.contracts.FlightSuretyApp.new().then(function(instance) {
+            contractSetter(instance)
             callback(instance)
         }).catch(function(err) {
             console.log(err.message);
@@ -126,7 +130,9 @@ export default class ContractApp {
     }
 
     async loadContract(contractAddress, callback) {
+        const contractSetter = this.setContract.bind(this)
         this.contracts.FlightSuretyApp.at(contractAddress).then(function(instance) {
+            contractSetter(instance)
             callback(instance)
         }).catch(function(err) {
             console.log(err.message);
@@ -134,13 +140,13 @@ export default class ContractApp {
         });
     }
 
+    async setContract(instance) {
+        this.contract = instance
+        console.log("Contract Set")
+        console.log(this.contract)
+    }
 
-
-    async registerAirline(contractAddress, callback, address) {
-        console.log(contractAddress)
-        console.log(address)
-        const contractInstance = await this.contracts.FlightSuretyApp.at(contractAddress)
-
+    async registerAirline(contractInstance, callback, address) {
         try{
             const callAction = await contractInstance.registerAirline(address);
             return callback({successful: true, tx : callAction, message : "Airline registered successfully"})
@@ -150,9 +156,7 @@ export default class ContractApp {
         }
     }
 
-    async fund(contractAddress, callback, value) {
-        const contractInstance = await this.contracts.FlightSuretyApp.at(contractAddress)
-
+    async fund(contractInstance, callback, value) {
         try{
             const callAction = await contractInstance.fund({value : value});
             return callback({successful: true, tx : callAction, message : "Airline contributed successfully"})
@@ -162,9 +166,7 @@ export default class ContractApp {
         }
     }
 
-    async registerFlight(contractAddress, callback, address, flightNumber, dateTime) {
-        const contractInstance = await this.contracts.FlightSuretyApp.at(contractAddress)
-
+    async registerFlight(contractInstance, callback, address, flightNumber, dateTime) {
         try{
             const callAction = await contractInstance.registerFlight(address, flightNumber, dateTime);
             return callback({successful: true, tx : callAction, message : "Flight registered successfully"})
@@ -174,20 +176,16 @@ export default class ContractApp {
         }
     }
 
-    async buyPolicy(contractAddress, callback, address, flightNumber, dateTime, premium) {
-        const contractInstance = await this.contracts.FlightSuretyApp.at(contractAddress)
-
+    async buyPolicy(contractInstance, callback, address, flightNumber, dateTime, ticketNumber, premium) {
         try{
-            const flightKey = await config.flightSuretyApp.getFlightKey(address, flightNumber, dateTime);
-            const callAction = await contractInstance.buy(flightKey, flightNumber, {value : web3.toWei(premium,"ether")});
-            return callback({successful: true, tx : callAction, message : "Flight registered successfully"})
+            const flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime / 1000);
+            const callAction = await contractInstance.buy(flightKey, ticketNumber, {value : web3.toWei(premium,"ether")});
+            return callback({successful: true, tx : callAction, message : "Insurance purchased successfully"})
         }
         catch(error){
             return callback({successful: false, tx : null, message : error.toString()})
         }
     }
-
-
 
     isOperational(callback) {
        let self = this;
@@ -212,9 +210,8 @@ export default class ContractApp {
 
 
 
-    async fetchAirlinesSummary(contractAddress, callback) {
-        const contractInstance = await this.contracts.FlightSuretyApp.at(contractAddress)
-        try{
+    async fetchAirlinesSummary(contractInstance, callback) {
+         try{
             let airlinesSummary = await contractInstance.fetchAirlinesSummary();
             callback({
                 successful: true, message : 'Airlines summary fetched successful',
@@ -232,8 +229,7 @@ export default class ContractApp {
         }
      }
 
-     async fetchAirlineSummary(contractAddress, callback, airlineAddress) {
-        const contractInstance = await this.contracts.FlightSuretyApp.at(contractAddress)
+     async fetchAirlineSummary(contractInstance, callback, airlineAddress) {
         try{
             let summary = await contractInstance.fetchAirlineSummary(airlineAddress);
             callback({
@@ -250,8 +246,7 @@ export default class ContractApp {
         }
      }
 
-     async fetchFlightSummary(contractAddress, callback, address, flightNumber, dateTime) {
-        const contractInstance = await this.contracts.FlightSuretyApp.at(contractAddress)
+     async fetchFlightSummary(contractInstance, callback, address, flightNumber, dateTime) {
         try{
             let flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime);
 
@@ -280,17 +275,14 @@ export default class ContractApp {
      }
 
 
-     async fetchPolicySummary(contractAddress, callback, address, ticketNumber, dateTime) {
-         console.log(address)
-         console.log(ticketNumber)
-         console.log(dateTime)
-        const contractInstance = await this.contracts.FlightSuretyApp.at(contractAddress)
+     async fetchPolicySummary(contractInstance, callback, address, flightNumber,  dateTime ,ticketNumber) {
         try{
-            const flightKey = await config.flightSuretyApp.getFlightKey(address, flightNumber, dateTime);
+            const flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime / 1000);
             let policyKey = await contractInstance.getPolicyKey(flightKey, ticketNumber);
 
-            console.log(policyKey)
+
             let summary = await contractInstance.fetchPolicySummary(policyKey);
+
             callback({
                 successful: true, message : 'Policy summary fetched successful',
                 summary : {
@@ -306,6 +298,7 @@ export default class ContractApp {
             })
         }
         catch(error){
+            console.log(error)
             return callback({successful: false, message : error.toString()})
         }
      }

@@ -7,7 +7,7 @@ class SelectFlight extends Component {
         this.state = {
             airlineAddress : "0x627306090abaB3A6e1400e9345bC60c78a8BEf57",
             flightNumber : "AA001",
-            dateTime : new Date(2019,0,1,8,0)
+            dateTime : new Date(2019,1,1,8,0)
         }
     }
 
@@ -35,15 +35,6 @@ class SelectFlight extends Component {
             return {dateTime : date}
         })
         this.props.handleDateTimeChange(date)
-    }
-
-    handleChangeTicketNumber(e){
-        const ticketNumber = e.target.value
-
-        this.setState(() => {
-            return {ticketNumber : ticketNumber}
-        })
-        this.props.handleChangeTicketNumber(ticketNumber)
     }
 
   render() {

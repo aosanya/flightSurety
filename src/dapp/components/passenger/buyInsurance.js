@@ -9,8 +9,8 @@ class BuyInsurance extends Component {
     this.state = {
       airlineAddress : "0x627306090abaB3A6e1400e9345bC60c78a8BEf57",
       flightNumber : "AA001",
-      dateTime : new Date(2019,0,1,8,0),
-      ticketNumber : "AA001001",
+      dateTime : new Date(2019,1,1,8,0),
+      ticketNumber : "AA0010011",
       premium : null,
       results : null,
       actionCalled : false,
@@ -39,6 +39,7 @@ class BuyInsurance extends Component {
     this.setState(() => {
       return {ticketNumber : ticketNumber}
     })
+    console.log(ticketNumber)
   }
 
   handleChangePremium(e){
@@ -47,12 +48,13 @@ class BuyInsurance extends Component {
     this.setState(() => {
       return {premium : newPremium}
     })
+
+    console.log(newPremium)
   }
 
   handleBuyPolicy (e){
     e.preventDefault()
-    const flightKey = 'test'
-    this.props.contractApp.fetchPolicySummary(this.props.contractAddress, this.buyPolicyCallback.bind(this), flightKey, this.state.flightNumber)
+    this.props.contractApp.buyPolicy(this.props.contract, this.buyPolicyCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime, this.state.ticketNumber, this.state.premium)
   }
 
   buyPolicyCallback (results){
@@ -61,13 +63,19 @@ class BuyInsurance extends Component {
     })
   }
 
-  handleBack (e){
+  handleBuyMore (e){
+    e.preventDefault()
+    this.setState(() => {
+      return {airlineAddress : "", flightNumber : "", dateTime : new Date(), ticketNumber : null, premium : null, actionCalled : false, results : {}}
+    })
+  }
+
+  handleBackToBuy (e){
     e.preventDefault()
     this.setState(() => {
       return {actionCalled : false, results : {}}
     })
   }
-
   render() {
     const {results, actionCalled} = this.state;
     if (this.props.contractAddress == null){
@@ -81,7 +89,7 @@ class BuyInsurance extends Component {
       const airlines = this.props.contractApp.demoData.AirlineAddresses;
       return (
         <div>
-          <h3 className='center'>Policy Summary</h3>
+          <h3 className='center'>Buy Insurance</h3>
           <SelectFlight
             contractApp = {this.props.contractApp}
             handleChangeAddress={this.handleChangeAddress.bind(this)}
@@ -107,33 +115,31 @@ class BuyInsurance extends Component {
             /> Ether
             <br/>
           <button className="button" onClick={this.handleBuyPolicy.bind(this)}>
-              Load Summary
+              Buy Insurance
           </button>
           <br/>
         </div>
       )
     }
-    if (results == null){
+    else{
       return (
         <div>
-          <h3 className='center'>Policy Summary</h3>
-          Loading summary
+            <div className="form-group">
+              <div className={results.successful ? 'success' : 'warning'}><span className="Info">{results.message}</span></div>
+              {results.successful === true &&
+                <button className="button" onClick={this.handleBuyMore.bind(this)}>
+                  Buy More
+                </button>
+              }
+               {results.successful === false &&
+                <button className="button" onClick={this.handleBackToBuy.bind(this)}>
+                  Back to Buy Insurance
+                </button>
+              }
+            </div>
         </div>
       )
     }
-    return (
-      <div className="center-div">
-        <div className="form-group auto-width">
-            <h3 className='center'>Policy Summary</h3>
-            {results.successful === true &&
-                <Details results={results}/>
-            }
-            <button className="button" onClick={this.handleBack.bind(this)}>
-              Back
-            </button>
-        </div>
-      </div>
-    )
   }
 }
 

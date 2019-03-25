@@ -39,7 +39,7 @@ class FlightSummary extends Component {
 
   handleFetchSummary (e){
     e.preventDefault()
-    this.props.contractApp.fetchFlightSummary(this.props.contractAddress, this.fetchSummaryCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime / 1000)
+    this.props.contractApp.fetchFlightSummary(this.props.contract, this.fetchSummaryCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime / 1000)
   }
 
   fetchSummaryCallback (results){

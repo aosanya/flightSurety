@@ -21,7 +21,7 @@ class Fund extends Component {
 
   handleFund (e){
     e.preventDefault()
-    this.props.contractApp.fund(this.props.contractAddress, this.fundingCallback.bind(this), web3.toWei(this.state.contribution,"ether"))
+    this.props.contractApp.fund(this.props.contract, this.fundingCallback.bind(this), web3.toWei(this.state.contribution,"ether"))
   }
 
   handleFundMore (e){

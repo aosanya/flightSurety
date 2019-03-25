@@ -201,9 +201,9 @@ input.currency {
 
   .nav {
     overflow: hidden;
+    margin-top: 5px;
     /* background-color: #111; */
   }
-
 
   .nav li {
     display: block;
@@ -256,3 +256,66 @@ input.currency {
     padding-top: 20px;
    }
   /*  */
+
+  .fixedTopRight{
+    position:fixed;
+    top:0;
+    right:0;
+    z-index: 10000;
+  }
+
+/* loading Bar */
+.loadingBar ul {
+  margin-left: 20px;
+  margin-top: 20px;
+}
+.loadingBar li {
+  float: left;
+  width: 10px;
+  height: 10px;
+  background: #00BCD4;
+  border: 1px solid #00BCD4;
+  box-sizing: border-box;
+  margin-right:8px;
+  opacity: 0.2;
+}
+
+.loadingBar li:nth-child(1) {
+  animation-name: anim;
+  animation-duration: .9s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.loadingBar li:nth-child(2) {
+  animation-name: anim;
+  animation-duration: .9s;
+  animation-delay: .3s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.loadingBar li:nth-child(3) {
+  animation-name: anim;
+  animation-duration: .9s;
+  animation-delay: .6s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.loadingBar li:nth-child(4) {
+  animation-name: anim;
+  animation-duration: .9s;
+  animation-delay: .7s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes anim {
+  from {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  to {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+}
+/* end of loading bar */

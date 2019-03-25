@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import Details from '../shared/details'
 import SelectFlight from '../flight/selectFlight'
-
+import { showLoading, hideLoading } from 'react-redux-loading'
 
 class PolicySummary extends Component {
   constructor( props ) {
@@ -10,11 +10,13 @@ class PolicySummary extends Component {
     this.state = {
       airlineAddress : "0x627306090abaB3A6e1400e9345bC60c78a8BEf57",
       flightNumber : "AA001",
-      dateTime : new Date(2019,0,1,8,0),
+      dateTime : new Date(2019,1,1,8,0),
       ticketNumber : "AA001001",
       results : null,
       actionCalled : false,
     }
+
+    console.log(this.state.dateTime)
   }
 
   handleChangeAddress(airlineAddress){
@@ -35,21 +37,26 @@ class PolicySummary extends Component {
     })
   }
 
-  handleChangeTicketNumber(ticketNumber){
+  handleChangeTicketNumber(e){
+    const ticketNumber = e.target.value
+
     this.setState(() => {
-      return {ticketNumber : ticketNumber}
+        return {ticketNumber : ticketNumber}
     })
   }
 
+
   handleFetchSummary (e){
     e.preventDefault()
-    this.props.contractApp.fetchPolicySummary(this.props.contractAddress, this.fetchSummaryCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime)
+    this.props.dispatch(showLoading())
+    this.props.contractApp.fetchPolicySummary(this.props.contract, this.fetchSummaryCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime, this.state.ticketNumber)
   }
 
   fetchSummaryCallback (results){
     this.setState(() => {
       return {actionCalled : true, results : results}
     })
+    this.props.dispatch(hideLoading())
   }
 
   handleBack (e){

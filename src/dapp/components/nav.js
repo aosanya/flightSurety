@@ -53,13 +53,13 @@ class Nav extends Component {
             <li className="nav"><a href="#">Passengers</a>
               <ul className="nav dropdown">
                 <li className="nav">
-                  <NavLink to='passenger/buyInsurance' exact activeClassName='active'>Buy Insurance</NavLink>
+                  <NavLink to='/passenger/buyInsurance' exact activeClassName='active'>Buy Insurance</NavLink>
                 </li>
                 <li className="nav">
-                  <NavLink to='passenger/withdrawClaim' exact activeClassName='active'>Withdraw Claim</NavLink>
+                  <NavLink to='/passenger/withdrawClaim' exact activeClassName='active'>Withdraw Claim</NavLink>
                 </li>
                 <li className="nav">
-                  <NavLink to='passenger/policySummary' exact activeClassName='active'>Policy Summary</NavLink>
+                  <NavLink to='/passenger/policySummary' exact activeClassName='active'>Policy Summary</NavLink>
                 </li>
               </ul>
             </li>

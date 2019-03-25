@@ -9,7 +9,7 @@ class AirlinesSummary extends Component {
       results : null
     }
     if (this.props.contractAddress !== null){
-      this.props.contractApp.fetchAirlinesSummary(this.props.contractAddress, this.fetchAirlinesSummaryCallback.bind(this))
+      this.props.contractApp.fetchAirlinesSummary(this.props.contract, this.fetchAirlinesSummaryCallback.bind(this))
     }
   }
 
@@ -37,14 +37,11 @@ class AirlinesSummary extends Component {
       )
     }
     return (
-
-      <div className="center-div">
-        <div className="form-group auto-width">
-            <h3 className='center'>Airlines Summary</h3>
-            {results.successful === true &&
-                <Details results={results}/>
-            }
-        </div>
+      <div>
+        <h3 className='center'>Airlines Summary</h3>
+        {results.successful === true &&
+            <Details results={results}/>
+        }
       </div>
     )
   }

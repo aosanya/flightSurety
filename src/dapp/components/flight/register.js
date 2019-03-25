@@ -38,7 +38,7 @@ class Register extends Component {
 
   handleRegisterFlight (e){
     e.preventDefault()
-    this.props.contractApp.registerFlight(this.props.contractAddress, this.registerFlightCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime / 1000)
+    this.props.contractApp.registerFlight(this.props.contract, this.registerFlightCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime / 1000)
   }
 
   handleRegisterAnother (e){

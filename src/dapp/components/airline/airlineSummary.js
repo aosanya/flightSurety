@@ -22,7 +22,7 @@ class AirlineSummary extends Component {
 
   handleFetchSummary (e){
     e.preventDefault()
-    this.props.contractApp.fetchAirlineSummary(this.props.contractAddress, this.fetchAirlineSummaryCallback.bind(this), this.state.airlineAddress)
+    this.props.contractApp.fetchAirlineSummary(this.props.contract, this.fetchAirlineSummaryCallback.bind(this), this.state.airlineAddress)
   }
 
   fetchAirlineSummaryCallback (results){
@@ -50,8 +50,7 @@ class AirlineSummary extends Component {
     }
     if (actionCalled == false){
       return (
-        <div className="center-div">
-            <div className="form-group auto-width">
+        <div>
               <h3 className='center'>Airline Summary</h3>
               Airline Address
               <br/>
@@ -65,7 +64,6 @@ class AirlineSummary extends Component {
                   Load Summary
               </button>
               <br/>
-          </div>
         </div>
       )
     }
