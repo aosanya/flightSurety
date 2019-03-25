@@ -50,3 +50,18 @@ Deploy the contents of the ./dapp folder
 * [Solidity Language Reference](http://solidity.readthedocs.io/en/v0.4.24/)
 * [Ethereum Blockchain Explorer](https://etherscan.io/)
 * [Web3Js Reference](https://github.com/ethereum/wiki/wiki/JavaScript-API)
+
+
+
+#Installing Demo Contract
+
+Run Test : truffle test test/policies.js
+Take note of the contract address e.g.
+
+    Contract: Flight Surety App Tests
+    Contract Address is : 0x2eca6fcfef74e2c8d03fbaf0ff6712314c9bd58b
+        Policy Purchase
+        ✓ Buy Policy (1482ms)...
+
+On the home page, click 'Load Existing Contract'
+You should have the following entities in your dapp to test with

@@ -36,11 +36,9 @@ contract('Flight Surety App Tests', async (accounts) => {
 
   const flight1 = {"airline" : airline1, "flightNumber" : "AA001", "time" : new Date(2019,01,01,08,00) / 1000, key : "0xcbaa35fdc6f4b18e88d9ed55d4934a2b7d6c9c1d9a348db3f6f133d3d9bf4c65"}
   const flight2 = {"airline" : airline1, "flightNumber" : "AA001", "time" : new Date(2019,02,01,08,00) / 1000, key : "0xa970d9a96a7d46b67f56443b0c7dd61951e3ba6ef521ed0a3d280d1250f3c3af"}
-  // const flight3 = {"airline" : airline2, "flightNumber" : "BB001", "time" : new Date(2019,03,01,08,00) / 1000, key : "0x8b7f1cdf1105030ea4d859fecfc125b42efb069a15df8cf1efffe168379259e4"}
-  // const flight4 = {"airline" : airline3, "flightNumber" : "CC001", "time" : new Date(2019,04,01,08,00) / 1000, key : "0x7bf71f9e08be7aef25e8c59356d6ce773eaf12ccfb1ccd1ec602da2ff32ef2e5"}
-  // const flight5 = {"airline" : airline4, "flightNumber" : "DD001", "time" : new Date(2019,05,01,08,00) / 1000, key : "0x530f9044bd37b1d7e3c467234a3f6476cec72b3b69ce400d4ca0df71f75bd309"}
-  // const flight6 = {"airline" : airline5, "flightNumber" : "EE001", "time" : new Date(2019,06,01,08,00) / 1000, key : "0x8a59925476d8ee3d0d5e790e3a6a21bf25ab167bbe283d6d5f0fe894649f19dd"}
-  // const flight7 = {"airline" : airline6, "flightNumber" : "FF001", "time" : new Date(2019,07,01,08,00) / 1000, key : "0x9e67da410ca1482f54011491995d53c35788bad9be5bb14b2e9da79da407ea69"}
+  const flight3 = {"airline" : airline2, "flightNumber" : "BB001", "time" : new Date(2019,03,01,08,00) / 1000, key : "0x8b7f1cdf1105030ea4d859fecfc125b42efb069a15df8cf1efffe168379259e4"}
+  const flight4 = {"airline" : airline3, "flightNumber" : "CC001", "time" : new Date(2019,04,01,08,00) / 1000, key : "0x7bf71f9e08be7aef25e8c59356d6ce773eaf12ccfb1ccd1ec602da2ff32ef2e5"}
+  const flight5 = {"airline" : airline4, "flightNumber" : "DD001", "time" : new Date(2019,05,01,08,00) / 1000, key : "0x530f9044bd37b1d7e3c467234a3f6476cec72b3b69ce400d4ca0df71f75bd309"}
 
   const ticket1 = {"passenger" : passenger1, "flight" : flight1, "ticket" : "AA001001"}
   const ticket2 = {"passenger" : passenger2, "flight" : flight1, "ticket" : "AA001002"}
@@ -61,9 +59,25 @@ contract('Flight Surety App Tests', async (accounts) => {
     await config.flightSuretyApp.fund({from: airline4, value: web3.toWei(10,"ether")});
 
 
-    //Register Flights
+    //Register Flight 1
     await config.flightSuretyApp.registerFlight(airline1, flight1.flightNumber, flight1.time, {from: airline1});
     await config.flightSuretyApp.registerFlight(airline1, flight1.flightNumber, flight1.time, {from: airline2});
+
+    //Register Flight 2
+    await config.flightSuretyApp.registerFlight(flight2.airline, flight2.flightNumber, flight2.time, {from: airline1});
+    await config.flightSuretyApp.registerFlight(flight2.airline, flight2.flightNumber, flight2.time, {from: airline2});
+
+    //Register Flight 3
+    await config.flightSuretyApp.registerFlight(flight3.airline, flight3.flightNumber, flight3.time, {from: airline1});
+    await config.flightSuretyApp.registerFlight(flight3.airline, flight3.flightNumber, flight3.time, {from: airline2});
+
+    //Register Flight 4
+    await config.flightSuretyApp.registerFlight(flight4.airline, flight4.flightNumber, flight4.time, {from: airline1});
+    await config.flightSuretyApp.registerFlight(flight4.airline, flight4.flightNumber, flight4.time, {from: airline2});
+
+    //Register Flight 5
+    await config.flightSuretyApp.registerFlight(flight5.airline, flight5.flightNumber, flight5.time, {from: airline1});
+    await config.flightSuretyApp.registerFlight(flight5.airline, flight5.flightNumber, flight5.time, {from: airline2});
 
     //register Oracles
     let oracleRegistrationFee = await config.flightSuretyApp.REGISTRATION_FEE();

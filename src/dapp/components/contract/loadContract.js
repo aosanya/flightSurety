@@ -5,7 +5,7 @@ import { setContract } from '../../actions/contract'
 class LoadContract extends Component {
   constructor( props ) {
     super( props );
-    this.state = {address : "0x471c92f915ae766c4964eedc300e5b8ff41e443c"}
+    this.state = {address : "0x8e4c131b37383e431b9cd0635d3cf9f3f628edae"}
   }
 
   handleChange(e){

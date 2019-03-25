@@ -11,6 +11,8 @@ import AirlineSummary from "./airline/airlineSummary"
 import RegisterFlight from "./flight/register"
 import FlightSummary from "./flight/flightSummary"
 
+import PolicySummary from "./passenger/policySummary"
+
 import LoadContract from "./contract/loadContract"
 import Nav from "./nav"
 import ContractAddress from "./contractAddress"
@@ -51,6 +53,7 @@ class App extends React.Component {
                                 <Route path="/airline/airlinesummary" render={(props) => <AirlineSummary {...props} contractApp={this.state.contractApp} />}  />
                                 <Route path="/flight/register" render={(props) => <RegisterFlight {...props} contractApp={this.state.contractApp} />}  />
                                 <Route path="/flight/flightSummary" render={(props) => <FlightSummary {...props} contractApp={this.state.contractApp} />}  />
+                                <Route path="/passenger/policySummary" render={(props) => <PolicySummary {...props} contractApp={this.state.contractApp} />}  />
                             </Switch>
                         </div>
                     </div>

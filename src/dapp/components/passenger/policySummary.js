@@ -3,7 +3,8 @@ import { connect } from 'react-redux'
 import Details from '../shared/details'
 import SelectFlight from '../flight/selectFlight'
 
-class BuyInsurance extends Component {
+
+class PolicySummary extends Component {
   constructor( props ) {
     super( props );
     this.state = {
@@ -11,7 +12,6 @@ class BuyInsurance extends Component {
       flightNumber : "AA001",
       dateTime : new Date(2019,0,1,8,0),
       ticketNumber : "AA001001",
-      premium : null,
       results : null,
       actionCalled : false,
     }
@@ -41,21 +41,12 @@ class BuyInsurance extends Component {
     })
   }
 
-  handleChangePremium(e){
-    const newPremium = e.target.value
-
-    this.setState(() => {
-      return {premium : newPremium}
-    })
-  }
-
-  handleBuyPolicy (e){
+  handleFetchSummary (e){
     e.preventDefault()
-    const flightKey = 'test'
-    this.props.contractApp.fetchPolicySummary(this.props.contractAddress, this.buyPolicyCallback.bind(this), flightKey, this.state.flightNumber)
+    this.props.contractApp.fetchPolicySummary(this.props.contractAddress, this.fetchSummaryCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime)
   }
 
-  buyPolicyCallback (results){
+  fetchSummaryCallback (results){
     this.setState(() => {
       return {actionCalled : true, results : results}
     })
@@ -81,35 +72,25 @@ class BuyInsurance extends Component {
       const airlines = this.props.contractApp.demoData.AirlineAddresses;
       return (
         <div>
-          <h3 className='center'>Policy Summary</h3>
-          <SelectFlight
-            contractApp = {this.props.contractApp}
-            handleChangeAddress={this.handleChangeAddress.bind(this)}
-            handleChangeFlightNumber={this.handleChangeFlightNumber.bind(this)}
-            handleDateTimeChange={this.handleDateTimeChange.bind(this)}
-          />
-          <br/>
-          Ticket Number
-          <br/>
-          <input
-            type="text"
-            defaultValue={this.state.ticketNumber}
-            onChange={this.handleChangeTicketNumber.bind(this)}
-          />
-          <br/>
-          Premium
-          <br/>
-            <input
-              type="number"
-              className="currency"
-              defaultValue={this.state.premium}
-              onChange={this.handleChangePremium.bind(this)}
-            /> Ether
-            <br/>
-          <button className="button" onClick={this.handleBuyPolicy.bind(this)}>
-              Load Summary
-          </button>
-          <br/>
+              <h3 className='center'>Policy Summary</h3>
+              <SelectFlight
+                contractApp = {this.props.contractApp}
+                handleChangeAddress={this.handleChangeAddress.bind(this)}
+                handleChangeFlightNumber={this.handleChangeFlightNumber.bind(this)}
+                handleDateTimeChange={this.handleDateTimeChange.bind(this)}
+              />
+              <br/>
+              Ticket Number
+              <br/>
+              <input
+                type="text"
+                defaultValue={this.state.ticketNumber}
+                onChange={this.handleChangeTicketNumber.bind(this)}
+              />
+              <button className="button" onClick={this.handleFetchSummary.bind(this)}>
+                  Load Summary
+              </button>
+              <br/>
         </div>
       )
     }
@@ -144,4 +125,4 @@ function mapStateToProps ({ contract }) {
   }
 }
 
-export default connect(mapStateToProps)(BuyInsurance)
+export default connect(mapStateToProps)(PolicySummary)
