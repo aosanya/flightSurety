@@ -40,10 +40,13 @@ class Nav extends Component {
                   <NavLink to='/flight/register' exact activeClassName='active'>Register</NavLink>
                 </li>
                 <li className="nav">
+                  <NavLink to='/flight/flightstatus' exact activeClassName='active'>Fetch Status</NavLink>
+                </li>
+                <li className="nav">
                   <NavLink to='/flight/flightsummary' exact activeClassName='active'>Flight Summary</NavLink>
                 </li>
                 <li className="nav">
-                  <NavLink to='/creditInsurees' exact activeClassName='active'>Credit Insurees</NavLink>
+                  <NavLink to='/flight/creditInsurees' exact activeClassName='active'>Credit Insurees</NavLink>
                 </li>
               </ul>
             </li>
@@ -56,7 +59,7 @@ class Nav extends Component {
                   <NavLink to='/passenger/buyInsurance' exact activeClassName='active'>Buy Insurance</NavLink>
                 </li>
                 <li className="nav">
-                  <NavLink to='/passenger/withdrawClaim' exact activeClassName='active'>Withdraw Claim</NavLink>
+                  <NavLink to='/passenger/withdrawPay' exact activeClassName='active'>Withdraw Pay</NavLink>
                 </li>
                 <li className="nav">
                   <NavLink to='/passenger/policySummary' exact activeClassName='active'>Policy Summary</NavLink>

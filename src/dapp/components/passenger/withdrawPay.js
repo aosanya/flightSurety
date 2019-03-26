@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import SelectFlight from '../flight/selectFlight'
 
-class BuyInsurance extends Component {
+class WithdrawPay extends Component {
   constructor( props ) {
     super( props );
     this.state = {
@@ -10,7 +10,6 @@ class BuyInsurance extends Component {
       flightNumber : "AA001",
       dateTime : new Date(2019,1,1,8,0),
       ticketNumber : "AA0010011",
-      premium : null,
       results : null,
       actionCalled : false,
     }
@@ -38,38 +37,28 @@ class BuyInsurance extends Component {
     this.setState(() => {
       return {ticketNumber : ticketNumber}
     })
-    console.log(ticketNumber)
   }
 
-  handleChangePremium(e){
-    const newPremium = e.target.value
 
-    this.setState(() => {
-      return {premium : newPremium}
-    })
-
-    console.log(newPremium)
-  }
-
-  handleBuyPolicy (e){
+  handleWithdrawClaim (e){
     e.preventDefault()
-    this.props.contractApp.buyPolicy(this.props.contract, this.buyPolicyCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime, this.state.ticketNumber, this.state.premium)
+    this.props.contractApp.withdrawClaim(this.props.contract, this.withdrawClaimCallback.bind(this), this.state.airlineAddress, this.state.flightNumber, this.state.dateTime, this.state.ticketNumber)
   }
 
-  buyPolicyCallback (results){
+  withdrawClaimCallback (results){
     this.setState(() => {
       return {actionCalled : true, results : results}
     })
   }
 
-  handleBuyMore (e){
+  handleWithdrawAnother (e){
     e.preventDefault()
     this.setState(() => {
-      return {airlineAddress : "", flightNumber : "", dateTime : new Date(), ticketNumber : null, premium : null, actionCalled : false, results : {}}
+      return {airlineAddress : "", flightNumber : "", dateTime : new Date(), ticketNumber : null, actionCalled : false, results : {}}
     })
   }
 
-  handleBackToBuy (e){
+  handleBackToWithdraw (e){
     e.preventDefault()
     this.setState(() => {
       return {actionCalled : false, results : {}}
@@ -88,7 +77,7 @@ class BuyInsurance extends Component {
       const airlines = this.props.contractApp.demoData.AirlineAddresses;
       return (
         <div>
-          <h3 className='center'>Buy Insurance</h3>
+          <h3 className='center'>Withdraw Pay</h3>
           <SelectFlight
             contractApp = {this.props.contractApp}
             handleChangeAddress={this.handleChangeAddress.bind(this)}
@@ -104,17 +93,8 @@ class BuyInsurance extends Component {
             onChange={this.handleChangeTicketNumber.bind(this)}
           />
           <br/>
-          Premium
-          <br/>
-            <input
-              type="number"
-              className="currency"
-              defaultValue={this.state.premium}
-              onChange={this.handleChangePremium.bind(this)}
-            /> Ether
-            <br/>
-          <button className="button" onClick={this.handleBuyPolicy.bind(this)}>
-              Buy Insurance
+          <button className="button" onClick={this.handleWithdrawClaim.bind(this)}>
+              Withdraw Pay
           </button>
           <br/>
         </div>
@@ -126,13 +106,13 @@ class BuyInsurance extends Component {
             <div className="form-group">
               <div className={results.successful ? 'success' : 'warning'}><span className="Info">{results.message}</span></div>
               {results.successful === true &&
-                <button className="button" onClick={this.handleBuyMore.bind(this)}>
-                  Buy More
+                <button className="button" onClick={this.handleWithdrawAnother.bind(this)}>
+                  Withdraw Another
                 </button>
               }
                {results.successful === false &&
-                <button className="button" onClick={this.handleBackToBuy.bind(this)}>
-                  Back to Buy Insurance
+                <button className="button" onClick={this.handleBackToWithdraw.bind(this)}>
+                  Back to Withdrawal
                 </button>
               }
             </div>
@@ -149,4 +129,4 @@ function mapStateToProps ({ contract }) {
   }
 }
 
-export default connect(mapStateToProps)(BuyInsurance)
+export default connect(mapStateToProps)(WithdrawPay)

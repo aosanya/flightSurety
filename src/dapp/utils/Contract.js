@@ -176,11 +176,34 @@ export default class ContractApp {
         }
     }
 
+    async creditInsurees(contractInstance, callback, address, flightNumber, dateTime) {
+        try{
+            const flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime / 1000);
+            const callAction = await contractInstance.creditInsurees(flightKey);
+            return callback({successful: true, tx : callAction, message : "Insurees credited successfully"})
+        }
+        catch(error){
+            return callback({successful: false, tx : null, message : error.toString()})
+        }
+    }
+
     async buyPolicy(contractInstance, callback, address, flightNumber, dateTime, ticketNumber, premium) {
         try{
             const flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime / 1000);
             const callAction = await contractInstance.buy(flightKey, ticketNumber, {value : web3.toWei(premium,"ether")});
             return callback({successful: true, tx : callAction, message : "Insurance purchased successfully"})
+        }
+        catch(error){
+            return callback({successful: false, tx : null, message : error.toString()})
+        }
+    }
+
+    async withdrawClaim(contractInstance, callback, address, flightNumber, dateTime, ticketNumber) {
+        try{
+            const flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime / 1000);
+            const policyKey = await contractInstance.getPolicyKey(flightKey, ticketNumber);
+            const callAction = await contractInstance.pay(policyKey);
+            return callback({successful: true, tx : callAction, message : "Claim paid out successfully"})
         }
         catch(error){
             return callback({successful: false, tx : null, message : error.toString()})
@@ -194,21 +217,28 @@ export default class ContractApp {
             .call({ from: self.owner}, callback);
     }
 
-    fetchFlightStatus(flight, callback) {
-        let self = this;
-        let payload = {
-            airline: self.airlines[0],
-            flight: flight,
-            timestamp: Math.floor(Date.now() / 1000)
+    async fetchFlightStatus(contractInstance, callback, address, flightNumber, dateTime) {
+        try{
+            const payload = {
+                airline: address,
+                flightNumber:flightNumber,
+                dateTime:dateTime,
+                timestamp: Math.floor(Date.now() / 1000)
+            }
+            const callAction = await contractInstance.fetchFlightStatus(address, flightNumber, dateTime / 1000, payload.timestamp);
+            return callback({successful: true, tx : callAction, message : "Status requested successfully",
+                summary : {
+                    airline : {title : 'Airline', value : payload.airline},
+                    flightNumber : {title : 'Flight Number', value : payload.flightNumber},
+                    flightDate : {title : 'Flight Date', value : payload.dateTime.toLocaleString()},
+                    timestamp : {title : 'Timestamp', value : payload.timestamp}
+                }
+            })
         }
-        self.flightSuretyApp.methods
-            .fetchFlightStatus(payload.airline, payload.flight, payload.timestamp)
-            .send({ from: self.owner}, (error, result) => {
-                callback(error, payload);
-        });
+        catch(error){
+            return callback({successful: false, tx : null, message : error.toString()})
+        }
     }
-
-
 
     async fetchAirlinesSummary(contractInstance, callback) {
          try{
@@ -248,7 +278,7 @@ export default class ContractApp {
 
      async fetchFlightSummary(contractInstance, callback, address, flightNumber, dateTime) {
         try{
-            let flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime);
+            let flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime / 1000);
 
             console.log(flightKey)
             let summary = await contractInstance.fetchFlightSummary(flightKey);
@@ -278,7 +308,7 @@ export default class ContractApp {
      async fetchPolicySummary(contractInstance, callback, address, flightNumber,  dateTime ,ticketNumber) {
         try{
             const flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime / 1000);
-            let policyKey = await contractInstance.getPolicyKey(flightKey, ticketNumber);
+            const policyKey = await contractInstance.getPolicyKey(flightKey, ticketNumber);
 
 
             let summary = await contractInstance.fetchPolicySummary(policyKey);

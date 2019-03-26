@@ -242,7 +242,13 @@ input.currency {
    }
 
 
-   .react-datetime-picker__wrapper {
+
+  /*  */
+
+  /* react-datetime-picker */
+
+
+  .react-datetime-picker__wrapper {
     background-color:  white;
     padding-top: 0px;
     padding-bottom: 12px;
@@ -252,9 +258,12 @@ input.currency {
     color: black;
    }
 
-   .react-datetime-picker__button:enabled {
+  .react-datetime-picker__button:enabled {
     padding-top: 20px;
-   }
+  }
+  .react-datetime-picker__inputGroup__year {
+    min-width: 40px;
+  }
   /*  */
 
   .fixedTopRight{

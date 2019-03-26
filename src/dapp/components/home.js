@@ -14,7 +14,6 @@ class Home extends Component {
     }
 
     render() {
-        console.log(this.props.contract)
         return (
             <div>
                 <h3 className='center'>Home</h3>
