@@ -10,9 +10,10 @@ import "./flightSuretyData.sol";
 /************************************************** */
 /* FlightSurety Smart Contract                      */
 /************************************************** */
-contract FlightSuretyApp is FlightSuretyData, AccessControl {
+contract FlightSuretyApp is FlightSuretyData {
     using SafeMath for uint256; // Allow SafeMath functions to be called for all uint256 types (similar to "prototype" in Javascript)
 
+    //FlightSuretyData flightSuretyData;
     /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
@@ -46,11 +47,6 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     // Modifiers help avoid duplication of code. They are typically used to validate something
     // before a function is allowed to be executed.
 
-    modifier requireHasQuorum()
-    {
-        require(hasQuorum() == true, ERROR_NO_QUORUM);
-        _;
-    }
 
     /**
     * @dev Modifier that requires the "operational" boolean variable to be "true"
@@ -78,15 +74,7 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         _;
     }
 
-    modifier requireNonRegisteredFlight(
-        address     _airline,
-        string      _flight,
-        uint256     _date
-    )
-    {
-        require(isFlightRegistered(_airline, _flight, _date) == false, ERROR_FLIGHT_IS_ALREADY_REGISTERED);
-        _;
-    }
+
 
 
     /**
@@ -98,12 +86,6 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
         _;
     }
 
-    modifier requireNotYetVotedAirlineXAirline(address _voter, address _votingFor)
-    {
-        Airline storage airline_ = airlines[_votingFor];
-        require(airline_.votedBy[_voter] == false, ERROR_AIRLINE_ALREADY_VOTED_FOR_AIRLINE);
-        _;
-    }
 
     modifier requireNotYetVotedAirlineXFlight(address _voter, bytes32 _votingForFlightId)
     {
@@ -123,8 +105,7 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     constructor() public
     {
         contractOwner = msg.sender;
-        Airline storage airline_ = addAirline(msg.sender);
-        incorporateAirline(airline_);
+        //flightSuretyData = FlightSuretyData(dataContract);
     }
 
     /********************************************************************************************/
@@ -144,114 +125,13 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
     /********************************************************************************************/
 
 
-   /**
-    * @dev Add an airline to the registration queue
-    *
-    */
-    function registerAirline(address _airlineAddress)
-                            public
-                            canRegisterAirline()
-                            requireNonRegisteredAirline(_airlineAddress)
-                            returns(bool success, uint256 votes, uint256 pendingVotes)
-    {
-        Airline storage airline_ = airlines[_airlineAddress];
-        if (airline_.exists == false) {
-            airline_ = addAirline(_airlineAddress);
-            if (hasQuorum() == false){
-                incorporateAirline(airline_);
-                success = true;
-                return (success, airline_.votes, 0);
-            }
-        }
 
-        success = voteAirlineXAirline(airline_);
 
-        return (success, airline_.votes, 0);
-    }
 
-    function incorporateAirline(Airline storage _airline)
-                            private
-    {
-        _airline.isRegistered = true;
-        registered += 1;
-        registrationQueue -= 1;
-        consensus = registered.mul(consensusPercentage).div(100);
-    }
 
-    function voteAirlineXAirline(Airline storage _airline)
-        private
-        requireNotYetVotedAirlineXAirline(msg.sender, _airline.id)
-        returns(bool isRegistered_)
-    {
-        _airline.votes += 1;
-        _airline.votedBy[msg.sender] = true;
-        if (consensus <= _airline.votes){
-            incorporateAirline(_airline);
-            isRegistered_ = true;
-        }
-    }
 
-    function registerFlight(
-        address     _airline,
-        string      _flight,
-        uint256     _date
-    )
-        public
-        requireHasQuorum()
-        canRegisterFlight()
-        requireNonRegisteredFlight(_airline, _flight, _date)
-        returns(bool success, uint256 votes, uint256 pendingVotes)
-    {
-        bytes32 flightId = getFlightKey(_airline, _flight, _date);
-        Flight storage flight_ = flights[flightId];
-        if (flight_.exists == false) {
-            flight_ = addFlight(_airline, _flight, _date, STATUS_CODE_UNKNOWN);
-        }
 
-        success = voteAirlineXFlight(flight_);
 
-        return (success, flight_.votes, 0);
-    }
-
-    function voteAirlineXFlight(Flight storage _flight)
-                            private
-                            requireNotYetVotedAirlineXFlight(msg.sender, _flight.Id)
-                            returns(bool isRegistered_)
-    {
-        _flight.votes += 1;
-        _flight.votedBy[msg.sender] = true;
-        if (consensus <= _flight.votes){
-            incorporateFlight(_flight);
-            isRegistered_ = true;
-        }
-    }
-
-    function incorporateFlight(Flight storage _flight)
-                            private
-    {
-        _flight.isRegistered = true;
-    }
-
-    /**
-    * @dev Initial funding for the insurance. Unless there are too many delayed flights
-    *      resulting in insurance payouts, the contract should be self-sustaining
-    *
-    */
-    function fund
-                            (
-                            )
-                            public
-                            requireIsRegistered(msg.sender)
-                            payable
-    {
-        contribute();
-        Airline storage airline_ = airlines[msg.sender];
-        if (airline_.contribution >= minimumContribution){
-            addPermission(AIRLINE_REGISTRATION_ROLE, msg.sender, "");
-            addPermission(FLIGHT_REGISTRATION_ROLE, msg.sender, "");
-            addPermission(CLAIMS_PAYOUT_ROLE, msg.sender, "");
-        }
-    }
 
     event creditingInsuree(bytes32 policy);
 
@@ -591,3 +471,14 @@ contract FlightSuretyApp is FlightSuretyData, AccessControl {
 // endregion
 
 }
+
+// contract FlightSuretyData{
+//     struct Airline {
+//         address id;
+//         uint256 votes;
+//         mapping (address => bool) votedBy;
+//         bool isRegistered;
+//         uint256 contribution;
+//         bool exists;
+//     }
+// }

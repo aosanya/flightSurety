@@ -1,8 +1,9 @@
 pragma solidity ^0.4.25;
 
 import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./Accesscontrol.sol";
 
-contract FlightSuretyData {
+contract FlightSuretyData is AccessControl{
     using SafeMath for uint256;
 
     /********************************************************************************************/
@@ -24,6 +25,7 @@ contract FlightSuretyData {
     /********************************************************************************************/
     /*                                       ERROR CODES                                        */
     /********************************************************************************************/
+    string private constant ERROR_NO_QUORUM = "ERROR_NO_QUORUM";
     string private constant ERROR_AIRLINE_NOT_ENLISTED = "ERROR_AIRLINE_NOT_ENLISTED";
     string private constant ERROR_AIRLINE_ALREADY_ENLISTED = "ERROR_AIRLINE_ALREADY_ENLISTED";
     string private constant ERROR_AIRLINE_IS_NOT_REGISTERED = "ERROR_AIRLINE_IS_NOT_REGISTERED";
@@ -44,6 +46,14 @@ contract FlightSuretyData {
     string internal constant ERROR_NOT_POLICY_OWNER = "ERROR_NOT_POLICY_OWNER";
 
     string internal constant ERROR_CLAIM_IS_ALREADY_WITHDRAWN = "ERROR_CLAIM_IS_ALREADY_WITHDRAWN";
+
+    string private constant ERROR_CALLER_NOT_CONTRACT_OWNER = "ERROR_CALLER_NOT_CONTRACT_OWNER";
+    string private constant ERROR_AIRLINE_ALREADY_VOTED_FOR_AIRLINE = "ERROR_AIRLINE_HAS_ALREADY_VOTED_FOR_THIS_AIRLINE";
+
+    string private constant ERROR_FLIGHT_IS_NOT_REGISTERED = "ERROR_FLIGHT_IS_NOT_REGISTERED";
+    string private constant ERROR_FLIGHT_IS_ALREADY_REGISTERED = "ERROR_FLIGHT_IS_ALREADY_REGISTERED";
+    string private constant ERROR_AIRLINE_ALREADY_VOTED_FOR_FLIGHT = "ERROR_AIRLINE_HAS_ALREADY_VOTED_FOR_THIS_FLIGHT";
+
 
 
     struct Airline {
@@ -100,6 +110,8 @@ contract FlightSuretyData {
     */
     constructor() public {
         contractOwner = msg.sender;
+        Airline storage airline_ = addAirline(msg.sender);
+        incorporateAirline(airline_);
     }
 
     /********************************************************************************************/
@@ -108,6 +120,13 @@ contract FlightSuretyData {
 
     // Modifiers help avoid duplication of code. They are typically used to validate something
     // before a function is allowed to be executed.
+
+
+    modifier requireHasQuorum()
+    {
+        require(hasQuorum() == true, ERROR_NO_QUORUM);
+        _;
+    }
 
     modifier requireAirlineExist(address _who)
     {
@@ -126,6 +145,16 @@ contract FlightSuretyData {
     )
     {
         require(flights[_flightId].exists == true, ERROR_FLIGHT_NOT_ENLISTED);
+        _;
+    }
+
+    modifier canRegisterAirline() {
+        require(has(AIRLINE_REGISTRATION_ROLE, msg.sender, ""), ERROR_MISSING_AIRLINE_REGISTRATION_PERMISSION);
+        _;
+    }
+
+    modifier canRegisterFlight() {
+        require(has(FLIGHT_REGISTRATION_ROLE, msg.sender, ""), ERROR_MISSING_FLIGHT_REGISTRATION_PERMISSION);
         _;
     }
 
@@ -155,6 +184,30 @@ contract FlightSuretyData {
     {
         Flight storage flight_ = flights[_flightId];
         require(flight_.canBeInsured == true, ERROR_FLIGHT_CANNOT_BE_INSURED);
+        _;
+    }
+
+    modifier requireNonRegisteredFlight(
+    address     _airline,
+    string      _flight,
+    uint256     _date
+    )
+    {
+        require(isFlightRegistered(_airline, _flight, _date) == false, ERROR_FLIGHT_IS_ALREADY_REGISTERED);
+        _;
+    }
+
+    modifier requireNotYetVotedAirlineXAirline(address _voter, address _votingFor)
+    {
+        Airline storage airline_ = airlines[_votingFor];
+        require(airline_.votedBy[_voter] == false, ERROR_AIRLINE_ALREADY_VOTED_FOR_AIRLINE);
+        _;
+    }
+
+    modifier requireNotYetVotedAirlineXFlight(address _voter, bytes32 _votingForFlightId)
+    {
+        Flight storage flight_ = flights[_votingForFlightId];
+        require(flight_.votedBy[_voter] == false, ERROR_AIRLINE_ALREADY_VOTED_FOR_FLIGHT);
         _;
     }
 
@@ -203,6 +256,10 @@ contract FlightSuretyData {
         return operational;
     }
 
+    function hasQuorum()  public view returns(bool hasQuorum_){
+        hasQuorum_ = registered >= quorum;
+    }
+
 
     /**
     * @dev Sets contract operations on/off
@@ -219,6 +276,31 @@ contract FlightSuretyData {
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
+
+    /**
+    * @dev Add an airline to the registration queue
+    *
+    */
+    function registerAirline(address _airlineAddress)
+                            public
+                            canRegisterAirline()
+                            requireNonRegisteredAirline(_airlineAddress)
+                            returns(bool success, uint256 votes, uint256 pendingVotes)
+    {
+        Airline storage airline_ = airlines[_airlineAddress];
+        if (airline_.exists == false) {
+            airline_ = addAirline(_airlineAddress);
+            if (hasQuorum() == false){
+                incorporateAirline(airline_);
+                success = true;
+                return (success, airline_.votes, 0);
+            }
+        }
+
+        success = voteAirlineXAirline(airline_);
+
+        return (success, airline_.votes, 0);
+    }
 
    /**
     * @dev Add an airline to the registration queue
@@ -263,6 +345,72 @@ contract FlightSuretyData {
         return flight_;
     }
 
+
+
+    function incorporateAirline(Airline storage _airline)
+    private
+    {
+        _airline.isRegistered = true;
+        registered += 1;
+        registrationQueue -= 1;
+        consensus = registered.mul(consensusPercentage).div(100);
+    }
+
+    function voteAirlineXAirline(Airline storage _airline)
+    private
+    requireNotYetVotedAirlineXAirline(msg.sender, _airline.id)
+    returns(bool isRegistered_)
+    {
+        _airline.votes += 1;
+        _airline.votedBy[msg.sender] = true;
+        if (consensus <= _airline.votes){
+            incorporateAirline(_airline);
+            isRegistered_ = true;
+        }
+    }
+
+
+    function registerFlight(
+        address     _airline,
+        string      _flight,
+        uint256     _date
+    )
+        public
+        requireHasQuorum()
+        canRegisterFlight()
+        requireNonRegisteredFlight(_airline, _flight, _date)
+        returns(bool success, uint256 votes, uint256 pendingVotes)
+    {
+        bytes32 flightId = getFlightKey(_airline, _flight, _date);
+        Flight storage flight_ = flights[flightId];
+        if (flight_.exists == false) {
+            flight_ = addFlight(_airline, _flight, _date, 0); // 0 is status code unknown
+        }
+
+        success = voteAirlineXFlight(flight_);
+
+        return (success, flight_.votes, 0);
+    }
+
+
+    function voteAirlineXFlight(Flight storage _flight)
+    private
+    requireNotYetVotedAirlineXFlight(msg.sender, _flight.Id)
+    returns(bool isRegistered_)
+    {
+        _flight.votes += 1;
+        _flight.votedBy[msg.sender] = true;
+        if (consensus <= _flight.votes){
+            incorporateFlight(_flight);
+            isRegistered_ = true;
+        }
+    }
+
+    function incorporateFlight(Flight storage _flight)
+    private
+    {
+        _flight.isRegistered = true;
+    }
    /**
     * @dev Buy insurance for a flight
     *
@@ -315,6 +463,27 @@ contract FlightSuretyData {
         require(policy_.exists, ERROR_POLICY_DOES_NOT_EXIST);
         require(policy_.payout == 0, ERROR_ALREADY_PAIDOUT_CLAIM);
         policy_.payout = policy_.premium.mul(3).div(2);
+    }
+
+     /**
+    * @dev Initial funding for the insurance. Unless there are too many delayed flights
+    *      resulting in insurance payouts, the contract should be self-sustaining
+    *
+    */
+    function fund
+    (
+    )
+    public
+    requireIsRegistered(msg.sender)
+    payable
+    {
+        contribute();
+        Airline storage airline_ = airlines[msg.sender];
+        if (airline_.contribution >= minimumContribution){
+            addPermission(AIRLINE_REGISTRATION_ROLE, msg.sender, "");
+            addPermission(FLIGHT_REGISTRATION_ROLE, msg.sender, "");
+            addPermission(CLAIMS_PAYOUT_ROLE, msg.sender, "");
+        }
     }
 
     /**
