@@ -13,7 +13,7 @@ import "./flightSuretyData.sol";
 contract FlightSuretyApp is FlightSuretyData {
     using SafeMath for uint256; // Allow SafeMath functions to be called for all uint256 types (similar to "prototype" in Javascript)
 
-    //FlightSuretyData flightSuretyData;
+    FlightSuretyData flightSuretyData;
     /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
@@ -60,21 +60,6 @@ contract FlightSuretyApp is FlightSuretyData {
         _;  // All modifiers require an "_" which indicates where the function body will be added
     }
 
-    modifier requireIsRegistered(address _airlineAddress)
-    {
-        Airline storage airline_ = airlines[_airlineAddress];
-        require(airline_.isRegistered == true, ERROR_AIRLINE_IS_NOT_REGISTERED);
-        _;
-    }
-
-    modifier requireNonRegisteredAirline(address _airlineAddress)
-    {
-        Airline storage airline_ = airlines[_airlineAddress];
-        require(airline_.isRegistered == false, ERROR_AIRLINE_IS_ALREADY_REGISTERED);
-        _;
-    }
-
-
 
 
     /**
@@ -86,14 +71,6 @@ contract FlightSuretyApp is FlightSuretyData {
         _;
     }
 
-
-    modifier requireNotYetVotedAirlineXFlight(address _voter, bytes32 _votingForFlightId)
-    {
-        Flight storage flight_ = flights[_votingForFlightId];
-        require(flight_.votedBy[_voter] == false, ERROR_AIRLINE_ALREADY_VOTED_FOR_FLIGHT);
-        _;
-    }
-
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
     /********************************************************************************************/
@@ -102,10 +79,14 @@ contract FlightSuretyApp is FlightSuretyData {
     * @dev Contract constructor
     *
     */
-    constructor() public
+    constructor
+    (
+        address dataContract
+    )
+    public
     {
         contractOwner = msg.sender;
-        //flightSuretyData = FlightSuretyData(dataContract);
+        flightSuretyData = FlightSuretyData(dataContract);
     }
 
     /********************************************************************************************/
@@ -126,37 +107,6 @@ contract FlightSuretyApp is FlightSuretyData {
 
 
 
-
-
-
-
-
-
-
-    event creditingInsuree(bytes32 policy);
-
-    /**
-    *  @dev Credits payouts to insurees
-    */
-    function creditInsurees
-    (
-        bytes32  _flightId
-    )
-    external
-    canPayoutClaims()
-    requireFlightExist(_flightId)
-    {
-
-        Flight storage flight_ = flights[_flightId];
-        require(flight_.statusCode > 10, ERROR_POLICY_CANNOT_CLAIM);
-        require(flight_.paidoutClaims == false, ERROR_ALREADY_PAIDOUT_CLAIMS);
-        for(uint i = 1 ; i <= flight_.policyCount; i++) {
-            emit creditingInsuree(flight_.policies[i]);
-            creditInsuree(flight_.policies[i]);
-        }
-        flight_.paidoutClaims = true;
-    }
-
     /**
     * @dev Fallback function for funding smart contract.
     *
@@ -169,26 +119,6 @@ contract FlightSuretyApp is FlightSuretyData {
     }
 
 
-   /**
-    * @dev Called after oracle has updated flight status
-    *
-    */
-    function processFlightStatus
-    (
-        address         _airline,
-        string memory   _flight,
-        uint256         _date,
-        uint256         _timestamp,
-        uint8           _statusCode
-    )
-    internal
-    {
-        bytes32 flightId = getFlightKey(_airline, _flight, _date);
-
-        Flight storage flight_ = flights[flightId];
-        flight_.statusCode = _statusCode;
-        flight_.updatedTimestamp = _timestamp;
-    }
 
 
     uint32 testIndex;
@@ -243,76 +173,7 @@ contract FlightSuretyApp is FlightSuretyData {
         consensus_ = consensus;
     }
 
-    function fetchAirlineSummary(address _airlineAddress) public requireAirlineExist(_airlineAddress) view returns
-    (
-        uint256     votes_,
-        bool        isRegistered_,
-        uint256     contribution_
-    )
-    {
-        Airline storage airline_ = airlines[_airlineAddress];
-        votes_ = airline_.votes;
-        isRegistered_ = airline_.isRegistered;
-        contribution_ = airline_.contribution;
-    }
 
-    function fetchFlightSummary(bytes32 _flightId)
-    public
-    requireFlightExist(_flightId)
-    view returns
-    (
-        bytes32     Id_,
-        address     airline_,
-        string      flightNumber_,
-        uint256     date_,
-        bool        isRegistered_,
-        uint8       statusCode_,
-        uint256     updatedTimestamp_,
-        uint256     votes_,
-        bool        canBeInsured_,
-        uint256     policyCount_,
-        bool        paidoutClaims_
-    )
-    {
-        Flight storage flight_ = flights[_flightId];
-        Id_ = flight_.Id;
-        airline_ = flight_.airline;
-        flightNumber_ = flight_.flightNumber;
-        date_ = flight_.date;
-        isRegistered_ = flight_.isRegistered;
-        statusCode_ = flight_.statusCode;
-        updatedTimestamp_ = flight_.updatedTimestamp;
-        votes_ = flight_.votes;
-        canBeInsured_ = flight_.canBeInsured;
-        policyCount_ = flight_.policyCount;
-        paidoutClaims_ = flight_.paidoutClaims;
-    }
-
-    function fetchPolicySummary(bytes32 _policyId)
-    public
-    requirePolicyExist(_policyId)
-    view returns
-    (
-        bytes32  Id_,
-        address  insured_,
-        string   ticketNumber_,
-        bytes32  flightId_,
-        uint256  premium_,
-        uint256  payout_,
-        bool     isActive_,
-        bool     isWithdrawn_
-    )
-    {
-        Policy storage policy_ = policies[_policyId];
-        Id_ = policy_.Id;
-        insured_ = policy_.insured;
-        ticketNumber_ = policy_.ticketNumber;
-        flightId_ = policy_.flightId;
-        premium_ = policy_.premium;
-        payout_ = policy_.payout;
-        isActive_ = policy_.isActive;
-        isWithdrawn_ = policy_.isWithdrawn;
-    }
 
 
 // region ORACLE MANAGEMENT

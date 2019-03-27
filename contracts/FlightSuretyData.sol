@@ -117,10 +117,14 @@ contract FlightSuretyData is AccessControl{
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
     /********************************************************************************************/
-
-    // Modifiers help avoid duplication of code. They are typically used to validate something
-    // before a function is allowed to be executed.
-
+    /**
+    * @dev Modifier that requires the "ContractOwner" account to be the function caller
+    */
+    modifier requireContractOwner()
+    {
+        require(msg.sender == contractOwner, "Caller is not contract owner");
+        _;
+    }
 
     modifier requireHasQuorum()
     {
@@ -138,6 +142,20 @@ contract FlightSuretyData is AccessControl{
     {
         require(airlines[_who].exists == false, ERROR_AIRLINE_ALREADY_ENLISTED);
         _;  // All modifiers require an "_" which indicates where the function body will be added
+    }
+
+    modifier requireIsRegistered(address _airlineAddress)
+    {
+        Airline storage airline_ = airlines[_airlineAddress];
+        require(airline_.isRegistered == true, ERROR_AIRLINE_IS_NOT_REGISTERED);
+        _;
+    }
+
+    modifier requireNonRegisteredAirline(address _airlineAddress)
+    {
+        Airline storage airline_ = airlines[_airlineAddress];
+        require(airline_.isRegistered == false, ERROR_AIRLINE_IS_ALREADY_REGISTERED);
+        _;
     }
 
     modifier requireFlightExist(
@@ -166,19 +184,6 @@ contract FlightSuretyData is AccessControl{
         _;
     }
 
-    modifier requireIsRegistered(address _airlineAddress)
-    {
-        Airline storage airline_ = airlines[_airlineAddress];
-        require(airline_.isRegistered == true, ERROR_AIRLINE_IS_NOT_REGISTERED);
-        _;
-    }
-
-    modifier requireNonRegisteredAirline(address _airlineAddress)
-    {
-        Airline storage airline_ = airlines[_airlineAddress];
-        require(airline_.isRegistered == false, ERROR_AIRLINE_IS_ALREADY_REGISTERED);
-        _;
-    }
 
     modifier requireFlightCanBeInsured(bytes32 _flightId)
     {
@@ -230,15 +235,6 @@ contract FlightSuretyData is AccessControl{
         _;  // All modifiers require an "_" which indicates where the function body will be added
     }
 
-    /**
-    * @dev Modifier that requires the "ContractOwner" account to be the function caller
-    */
-    modifier requireContractOwner()
-    {
-        require(msg.sender == contractOwner, "Caller is not contract owner");
-        _;
-    }
-
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -259,7 +255,6 @@ contract FlightSuretyData is AccessControl{
     function hasQuorum()  public view returns(bool hasQuorum_){
         hasQuorum_ = registered >= quorum;
     }
-
 
     /**
     * @dev Sets contract operations on/off
@@ -453,6 +448,30 @@ contract FlightSuretyData is AccessControl{
         policy_.exists = true;
     }
 
+     event creditingInsuree(bytes32 policy);
+
+    /**
+    *  @dev Credits payouts to insurees
+    */
+    function creditInsurees
+    (
+        bytes32  _flightId
+    )
+    external
+    canPayoutClaims()
+    requireFlightExist(_flightId)
+    {
+
+        Flight storage flight_ = flights[_flightId];
+        require(flight_.statusCode > 10, ERROR_POLICY_CANNOT_CLAIM);
+        require(flight_.paidoutClaims == false, ERROR_ALREADY_PAIDOUT_CLAIMS);
+        for(uint i = 1 ; i <= flight_.policyCount; i++) {
+            emit creditingInsuree(flight_.policies[i]);
+            creditInsuree(flight_.policies[i]);
+        }
+        flight_.paidoutClaims = true;
+    }
+
     function creditInsuree
     (
         bytes32  _policyId
@@ -561,5 +580,101 @@ contract FlightSuretyData is AccessControl{
         bytes32 flightId_ = getFlightKey(_airline, _flight, _date);
         return flights[flightId_].isRegistered;
     }
+
+       /**
+    * @dev Called after oracle has updated flight status
+    *
+    */
+    function processFlightStatus
+    (
+        address         _airline,
+        string memory   _flight,
+        uint256         _date,
+        uint256         _timestamp,
+        uint8           _statusCode
+    )
+    internal
+    {
+        bytes32 flightId = getFlightKey(_airline, _flight, _date);
+
+        Flight storage flight_ = flights[flightId];
+        flight_.statusCode = _statusCode;
+        flight_.updatedTimestamp = _timestamp;
+    }
+
+    /********************************************************************************************/
+    /*                                       Fetch Summaries                                    */
+    /********************************************************************************************/
+    function fetchAirlineSummary(address _airlineAddress) public requireAirlineExist(_airlineAddress) view returns
+    (
+        uint256     votes_,
+        bool        isRegistered_,
+        uint256     contribution_
+    )
+    {
+        Airline storage airline_ = airlines[_airlineAddress];
+        votes_ = airline_.votes;
+        isRegistered_ = airline_.isRegistered;
+        contribution_ = airline_.contribution;
+    }
+
+    function fetchFlightSummary(bytes32 _flightId)
+    public
+    requireFlightExist(_flightId)
+    view returns
+    (
+        bytes32     Id_,
+        address     airline_,
+        string      flightNumber_,
+        uint256     date_,
+        bool        isRegistered_,
+        uint8       statusCode_,
+        uint256     updatedTimestamp_,
+        uint256     votes_,
+        bool        canBeInsured_,
+        uint256     policyCount_,
+        bool        paidoutClaims_
+    )
+    {
+        Flight storage flight_ = flights[_flightId];
+        Id_ = flight_.Id;
+        airline_ = flight_.airline;
+        flightNumber_ = flight_.flightNumber;
+        date_ = flight_.date;
+        isRegistered_ = flight_.isRegistered;
+        statusCode_ = flight_.statusCode;
+        updatedTimestamp_ = flight_.updatedTimestamp;
+        votes_ = flight_.votes;
+        canBeInsured_ = flight_.canBeInsured;
+        policyCount_ = flight_.policyCount;
+        paidoutClaims_ = flight_.paidoutClaims;
+    }
+
+    function fetchPolicySummary(bytes32 _policyId)
+    public
+    requirePolicyExist(_policyId)
+    view returns
+    (
+        bytes32  Id_,
+        address  insured_,
+        string   ticketNumber_,
+        bytes32  flightId_,
+        uint256  premium_,
+        uint256  payout_,
+        bool     isActive_,
+        bool     isWithdrawn_
+    )
+    {
+        Policy storage policy_ = policies[_policyId];
+        Id_ = policy_.Id;
+        insured_ = policy_.insured;
+        ticketNumber_ = policy_.ticketNumber;
+        flightId_ = policy_.flightId;
+        premium_ = policy_.premium;
+        payout_ = policy_.payout;
+        isActive_ = policy_.isActive;
+        isWithdrawn_ = policy_.isWithdrawn;
+    }
+
 }
 

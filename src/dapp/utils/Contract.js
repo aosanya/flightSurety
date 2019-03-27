@@ -120,7 +120,8 @@ export default class ContractApp {
 
     async createNewContract(callback) {
         const contractSetter = this.setContract.bind(this)
-        this.contracts.FlightSuretyApp.new().then(function(instance) {
+        let data = this.contracts.FlightSuretyData.new()
+        this.contracts.FlightSuretyApp.new(data.address).then(function(instance) {
             contractSetter(instance)
             callback(instance)
         }).catch(function(err) {
