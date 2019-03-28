@@ -2,6 +2,7 @@ import Config from '../../../utils/config.json';
 import DemoData from '../utils/DemoData.json';
 import web3Utils from '../../../utils/web3Utils';
 import FlightSuretyAppJson from '../../../build/contracts/FlightSuretyApp.json'
+import FlightSuretyDataJson from '../../../build/contracts/FlightSuretyData.json'
 
 export default class ContractApp {
     constructor(callback) {
@@ -60,6 +61,11 @@ export default class ContractApp {
         var contractArtifact = FlightSuretyAppJson;
         this.contracts.FlightSuretyApp = TruffleContract(contractArtifact);
         this.contracts.FlightSuretyApp.setProvider(this.web3Provider);
+
+        var contractDataArtifact = FlightSuretyDataJson;
+        this.contracts.FlightSuretyData = TruffleContract(contractDataArtifact);
+        this.contracts.FlightSuretyData.setProvider(this.web3Provider);
+
         await this.fetchEvents(null);
        }
 
@@ -119,10 +125,9 @@ export default class ContractApp {
     }
 
     async createNewContract(callback) {
-        const contractSetter = this.setContract.bind(this)
-        let data = this.contracts.FlightSuretyData.new()
+        let data = await this.contracts.FlightSuretyData.new()
+        console.log(data)
         this.contracts.FlightSuretyApp.new(data.address).then(function(instance) {
-            contractSetter(instance)
             callback(instance)
         }).catch(function(err) {
             console.log(err.message);
@@ -130,12 +135,13 @@ export default class ContractApp {
         });
     }
 
-    async loadContract(contractAddress, callback) {
-        const contractSetter = this.setContract.bind(this)
-        this.contracts.FlightSuretyApp.at(contractAddress).then(function(instance) {
-            contractSetter(instance)
+    async loadContract(contractAppAddress, callback) {
+        console.log("test2")
+        this.contracts.FlightSuretyApp.at(contractAppAddress).then(function(instance) {
+            console.log("test3")
             callback(instance)
         }).catch(function(err) {
+            console.log("error here")
             console.log(err.message);
             return null;
         });
@@ -189,10 +195,12 @@ export default class ContractApp {
     }
 
     async buyPolicy(contractInstance, callback, address, flightNumber, dateTime, ticketNumber, premium) {
+        console.log("test 1")
         try{
             const flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime / 1000);
             const callAction = await contractInstance.buy(flightKey, ticketNumber, {value : web3.toWei(premium,"ether")});
             return callback({successful: true, tx : callAction, message : "Insurance purchased successfully"})
+            console.log("test 1")
         }
         catch(error){
             return callback({successful: false, tx : null, message : error.toString()})

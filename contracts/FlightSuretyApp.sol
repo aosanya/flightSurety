@@ -5,12 +5,12 @@ pragma solidity ^0.4.25;
 // More info: https://www.nccgroup.trust/us/about-us/newsroom-and-events/blog/2018/november/smart-contract-insecurity-bad-arithmetic/
 
 import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./Accesscontrol.sol";
-import "./flightSuretyData.sol";
+
 /************************************************** */
 /* FlightSurety Smart Contract                      */
 /************************************************** */
-contract FlightSuretyApp is FlightSuretyData {
+//contract FlightSuretyApp is FlightSuretyData {
+contract FlightSuretyApp {
     using SafeMath for uint256; // Allow SafeMath functions to be called for all uint256 types (similar to "prototype" in Javascript)
 
     FlightSuretyData flightSuretyData;
@@ -33,6 +33,7 @@ contract FlightSuretyApp is FlightSuretyData {
     string private constant ERROR_AIRLINE_IS_ALREADY_REGISTERED = "ERROR_AIRLINE_IS_ALREADY_REGISTERED";
     string private constant ERROR_AIRLINE_ALREADY_VOTED_FOR_AIRLINE = "ERROR_AIRLINE_HAS_ALREADY_VOTED_FOR_THIS_AIRLINE";
 
+    string private constant ERROR_FLIGHT_NOT_ENLISTED = "ERROR_FLIGHT_NOT_ENLISTED";
     string private constant ERROR_FLIGHT_IS_NOT_REGISTERED = "ERROR_FLIGHT_IS_NOT_REGISTERED";
     string private constant ERROR_FLIGHT_IS_ALREADY_REGISTERED = "ERROR_FLIGHT_IS_ALREADY_REGISTERED";
     string private constant ERROR_AIRLINE_ALREADY_VOTED_FOR_FLIGHT = "ERROR_AIRLINE_HAS_ALREADY_VOTED_FOR_THIS_FLIGHT";
@@ -87,6 +88,7 @@ contract FlightSuretyApp is FlightSuretyData {
     {
         contractOwner = msg.sender;
         flightSuretyData = FlightSuretyData(dataContract);
+        flightSuretyData.registerFirstAirline(msg.sender);
     }
 
     /********************************************************************************************/
@@ -95,10 +97,10 @@ contract FlightSuretyApp is FlightSuretyData {
 
     function isOperational()
                             public
-                            view
+                            pure
                             returns(bool)
     {
-        return true;  // Modify to call data contract's status
+        return true;
     }
 
     /********************************************************************************************/
@@ -106,6 +108,17 @@ contract FlightSuretyApp is FlightSuretyData {
     /********************************************************************************************/
 
 
+        /**
+    * @dev Add an airline to the registration queue
+    *
+    */
+    function registerAirline(
+        address _airlineAddress)
+        public
+        returns(bool success, uint256 votes, uint256 pendingVotes)
+    {
+        return flightSuretyData.registerAirline(msg.sender, _airlineAddress);
+    }
 
     /**
     * @dev Fallback function for funding smart contract.
@@ -115,17 +128,32 @@ contract FlightSuretyApp is FlightSuretyData {
                             external
                             payable
     {
-        fund();
+        flightSuretyData.fund.value(msg.value)(msg.sender);
     }
 
+    function fund
+    (
+    )
+    public
+    payable
+    {
+        flightSuretyData.fund.value(msg.value)(msg.sender);
+    }
 
+    /********************************************************************************************/
+    /*                                       Flight Functions                                   */
+    /********************************************************************************************/
 
-
-    uint32 testIndex;
-    address testAirline;
-    string testFlight;
-    uint256 testDate;
-    uint256 testTimestamp;
+    function registerFlight(
+        address     _airline,
+        string      _flight,
+        uint256     _date
+    )
+        public
+        returns(bool success, uint256 votes, uint256 pendingVotes)
+    {
+        return flightSuretyData.registerFlight(msg.sender, _airline, _flight, _date);
+    }
 
     // Generate a request for oracles to fetch flight information
     function fetchFlightStatus
@@ -137,8 +165,8 @@ contract FlightSuretyApp is FlightSuretyData {
     )
     external
     {
-        bytes32 flightId = getFlightKey(_airline, _flight, _date);
-        require(flights[flightId].exists == true, ERROR_FLIGHT_NOT_ENLISTED);
+        bytes32 flightId_ = flightSuretyData.getFlightKey(_airline, _flight, _date);
+        require(flightSuretyData.flightExist(flightId_), ERROR_FLIGHT_NOT_ENLISTED);
         uint32 index_ = getRandomIndex(msg.sender);
 
         // Generate a unique key for storing the request
@@ -146,17 +174,24 @@ contract FlightSuretyApp is FlightSuretyData {
         oracleResponses[key] = ResponseInfo({requester: msg.sender, isOpen: true});
 
         emit OracleRequest(index_, _airline, _flight, _date, _timestamp);
-        testIndex = index_;
-        testAirline = _airline;
-        testFlight = _flight;
-        testDate = _date;
-        testTimestamp = _timestamp;
     }
 
     function hasQuorum()  public view returns(bool hasQuorum_){
-        hasQuorum_ = registered >= quorum;
+        hasQuorum_ = flightSuretyData.registered() >= flightSuretyData.quorum();
     }
 
+
+    function creditInsurees
+    (
+        bytes32  _flightId
+    )
+    external{
+        return flightSuretyData.creditInsurees(msg.sender, _flightId);
+    }
+
+    /********************************************************************************************/
+    /*                                       Fetch Summaries                                    */
+    /********************************************************************************************/
     function fetchAirlinesSummary() public view returns
     (
         uint256     registered_,
@@ -166,15 +201,137 @@ contract FlightSuretyApp is FlightSuretyData {
         uint256     consensus_
     )
     {
-        registered_ = registered;
-        registrationQueue_ = registrationQueue;
-        quorum_ = quorum;
-        consensusPercentage_ = consensusPercentage;
-        consensus_ = consensus;
+        registered_ = flightSuretyData.registered();
+        registrationQueue_ = flightSuretyData.registrationQueue();
+        quorum_ = flightSuretyData.quorum();
+        consensusPercentage_ = flightSuretyData.consensusPercentage();
+        consensus_ = flightSuretyData.consensus();
     }
 
+    function fetchAirlineSummary(address _airlineAddress)
+    public
+    view returns
+    (
+        uint256     votes_,
+        bool        isRegistered_,
+        uint256     contribution_
+    )
+    {
+        return flightSuretyData.fetchAirlineSummary(_airlineAddress);
+    }
 
+    function fetchFlightSummary(bytes32 _flightId)
+    public
+    view returns
+    (
+        bytes32     Id_,
+        address     airline_,
+        string      flightNumber_,
+        uint256     date_,
+        bool        isRegistered_,
+        uint8       statusCode_,
+        uint256     updatedTimestamp_,
+        uint256     votes_,
+        bool        canBeInsured_,
+        uint256     policyCount_,
+        bool        paidoutClaims_
+    )
+    {
 
+        return flightSuretyData.fetchFlightSummary(_flightId);
+    }
+
+    function fetchPolicySummary(bytes32 _policyId)
+    public
+    view returns
+    (
+        bytes32  Id_,
+        address  insured_,
+        string   ticketNumber_,
+        bytes32  flightId_,
+        uint256  premium_,
+        uint256  payout_,
+        bool     isActive_,
+        bool     isWithdrawn_
+    )
+    {
+        return flightSuretyData.fetchPolicySummary(_policyId);
+    }
+
+    /********************************************************************************************/
+    /*                                       Status Functions                                   */
+    /********************************************************************************************/
+    function isAirline(address _who)
+                            public
+                            view
+                            returns(bool)
+    {
+        return flightSuretyData.isAirline(_who);
+    }
+
+    function isFlightRegistered(
+        address         _airline,
+        string memory   _flight,
+        uint256         _date
+    )
+        public
+        view
+        returns(bool)
+    {
+        return flightSuretyData.isFlightRegistered(_airline, _flight, _date);
+    }
+
+    /********************************************************************************************/
+    /*                                       Policy Functions                                   */
+    /********************************************************************************************/
+
+    function buy(
+        bytes32  _flightId,
+        string   _ticketNumber
+    )
+        public
+        payable
+    {
+        return flightSuretyData.buy.value(msg.value)(msg.sender, _flightId, _ticketNumber);
+    }
+
+    function pay
+    (
+        bytes32  _policyId
+    )
+        external
+    {
+        return flightSuretyData.pay(msg.sender, _policyId);
+    }
+
+    /********************************************************************************************/
+    /*                                       Key Generators                                     */
+    /********************************************************************************************/
+
+    function getFlightKey
+    (
+        address _airline,
+        string memory _flight,
+        uint256 _date
+    )
+    public
+    view
+    returns(bytes32)
+    {
+        return flightSuretyData.getFlightKey(_airline, _flight, _date);
+    }
+
+    function getPolicyKey
+    (
+        bytes32 _flightId,
+        string  _ticketNumber
+    )
+    public
+    view
+    returns(bytes32)
+    {
+        return flightSuretyData.getPolicyKey(_flightId, _ticketNumber);
+    }
 
 // region ORACLE MANAGEMENT
 
@@ -279,7 +436,7 @@ contract FlightSuretyApp is FlightSuretyData {
             emit FlightStatusInfo(airline, flight, date, timestamp, statusCode);
 
             // Handle flight status as appropriate
-            processFlightStatus(airline, flight, date, timestamp, statusCode);
+            flightSuretyData.processFlightStatus(airline, flight, date, timestamp, statusCode);
         }
     }
 
@@ -333,13 +490,141 @@ contract FlightSuretyApp is FlightSuretyData {
 
 }
 
-// contract FlightSuretyData{
-//     struct Airline {
-//         address id;
-//         uint256 votes;
-//         mapping (address => bool) votedBy;
-//         bool isRegistered;
-//         uint256 contribution;
-//         bool exists;
-//     }
-// }
+contract FlightSuretyData{
+    uint256 public registered;
+    uint256 public registrationQueue;
+    uint256 public quorum;
+    uint256 public consensus;
+    uint256 public minimumContribution;
+    uint256 public consensusPercentage;
+    uint256 public maximumPremium;
+
+    function registerFirstAirline(address _airlineAddress) external;
+
+    function registerAirline(address _registrar, address _airlineAddress)
+                            external
+                            returns(bool success, uint256 votes, uint256 pendingVotes);
+
+    function fund(address _caller) external
+        payable;
+
+    function getFlightKey
+        (
+        address airline,
+        string memory flight,
+        uint256 date
+        )
+        public
+        pure
+        returns(bytes32);
+
+    function flightExist
+        (
+            bytes32  _flightId
+        )
+        public
+        view
+        returns(bool);
+
+    function isAirline(address _who)
+                            public
+                            view
+                            returns(bool);
+
+    function isFlightRegistered(
+        address         _airline,
+        string memory   _flight,
+        uint256         _date
+    )
+        public
+        view
+        returns(bool);
+
+    function processFlightStatus
+    (
+        address         _airline,
+        string          _flight,
+        uint256         _date,
+        uint256         _timestamp,
+        uint8           _statusCode
+    )
+    external;
+
+    function buy(
+        address   _buyer,
+        bytes32  _flightId,
+        string   _ticketNumber
+    )
+        public
+        payable;
+
+    function pay
+    (
+        address  _payee,
+        bytes32  _policyId
+    )
+        external;
+
+    function fetchAirlineSummary(address _airlineAddress) public view returns
+        (
+            uint256     votes_,
+            bool        isRegistered_,
+            uint256     contribution_
+        );
+
+    function fetchFlightSummary(bytes32 _flightId)
+    public
+    view returns
+        (
+            bytes32     Id_,
+            address     airline_,
+            string      flightNumber_,
+            uint256     date_,
+            bool        isRegistered_,
+            uint8       statusCode_,
+            uint256     updatedTimestamp_,
+            uint256     votes_,
+            bool        canBeInsured_,
+            uint256     policyCount_,
+            bool        paidoutClaims_
+        );
+
+    function fetchPolicySummary(bytes32 _policyId)
+    public
+    view returns
+        (
+            bytes32  Id_,
+            address  insured_,
+            string   ticketNumber_,
+            bytes32  flightId_,
+            uint256  premium_,
+            uint256  payout_,
+            bool     isActive_,
+            bool     isWithdrawn_
+        );
+
+    function registerFlight(
+        address     _registrar,
+        address     _airline,
+        string      _flight,
+        uint256     _date
+    )
+        public
+        returns(bool success, uint256 votes, uint256 pendingVotes);
+
+    function creditInsurees
+    (
+        address  _caller,
+        bytes32  _flightId
+    )
+    external;
+
+    function getPolicyKey
+    (
+        bytes32 flightId,
+        string  ticketNumber
+    )
+        public
+        pure
+        returns(bytes32);
+}

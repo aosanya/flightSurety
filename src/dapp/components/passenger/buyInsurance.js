@@ -57,6 +57,7 @@ class BuyInsurance extends Component {
   }
 
   buyPolicyCallback (results){
+    console.log(results)
     this.setState(() => {
       return {actionCalled : true, results : results}
     })

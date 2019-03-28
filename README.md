@@ -65,12 +65,104 @@ Deploy the contents of the ./dapp folder
 
 #Installing Demo Contract
 
-Run Test : truffle test test/policies.js
-Take note of the contract address e.g.
+## Create a test contract
+Run the Policies Test :
+    truffle test test/policies.js
 
+Take note of the contract address e.g.
     Contract: Flight Surety App Tests
-    Contract Address is : 0x2eca6fcfef74e2c8d03fbaf0ff6712314c9bd58b
+    FlightSuretyApp Address is : 0x52a2f2ea2f8d07d9fa0d9d73f1b9377fbab8fdbd
         Policy Purchase
         ✓ Buy Policy (1482ms)...
 
-On the home page, click 'Load Existing Contract'. The test actions should then yield the same results in the dapp.
+On the home page, click 'Load Existing Contract'.
+Complete the form by entering
+    App Contract Address
+    Click Load Contracts
+    LoadContract.png
+    LoadedContract.png
+
+This will load the contract and avail more menu options.
+
+# Demo Test Data
+
+## Airlines
+### Register Airline
+    Airline Address : Use address 5 ; 0x0d1d4e623D10F9FBA5Db95830F7d3839406C6AF2
+    Metamask should be one of registered airlines : Account 1 to 4
+    RegisterAirline.png
+
+### Fund
+    Enter Contribution(minimum is 10 Ether)
+    Contribute.png
+
+### Airlines Summary
+    AirlinesSummary.png
+
+### Airline Summary
+    Airline Address : Use addresse 1 -> 4 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
+    AirlineSummary.png
+    AirlineSummaryResult.png
+
+#Flights
+### Register Flight
+    Airline Address : Use addresse 1 -> 4 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
+    Flight Number : A1 10001 or any random Code
+    Flight Date and Time : Any date defaulted to
+    RegisterFlight.png
+
+### Flight Summary
+    Airline Address : Use addresse 1 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
+    Flight Number : AA001
+    Flight Date and Time : 2019-02-01
+    FlightSummary.png
+    FlightSummaryResult.png
+
+### Request Flight Status
+    Airline Address : Use addresse 1 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
+    Flight Number : AA001
+    Flight Date and Time : 2019-02-01
+    RequestFlightStatus.png
+    RequestFlightStatusResult.png
+
+### Credit Insurees
+    Airline Address : Use addresse 1 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
+    Flight Number : AA001
+    Flight Date and Time : 2019-02-01
+    CreditInsurance.png
+
+## Passenger
+
+### Buy Insurance
+    Change Metamask Address to Address 6
+    Airline Address : Use addresse 1 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
+    Flight Number : AA001
+    Flight Date and Time : 2019-02-01
+    Ticket Number : AA0010011 or any random code
+    Premium : Any amooun greater than 0
+    BuyInsurance.png
+
+### Withdraw Pay
+    Change Metamask Address to Address 6
+    Airline Address : Use addresse 1 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
+    Flight Number : AA001
+    Flight Date and Time : 2019-02-01
+    Ticket Number : AA0010011 or the code used to buy insurance
+    WithdrawPay.png
+
+### Policy Summary
+    Change Metamask Address to Address 6
+    Airline Address : Use addresse 1 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
+    Flight Number : AA001
+    Flight Date and Time : 2019-02-01
+    Ticket Number : AA001001 or the code used to buy insurance
+    PolicySummary.png
+    PolicySummaryResults.png
+
+
+
+
+
+
+
+

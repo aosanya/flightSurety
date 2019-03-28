@@ -12,20 +12,21 @@ contract FlightSuretyData is AccessControl{
 
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
-    uint256 consensus = 0;
+    uint256 public consensus = 0;
 
     /********************************************************************************************/
     /*                                       SETTINGS                                           */
     /********************************************************************************************/
-    uint256 constant quorum = 4;
-    uint256 constant minimumContribution = 10 ether;
-    uint256 constant consensusPercentage = 50;
-    uint256 constant maximumPremium = 1 ether;
+    uint256 constant public quorum = 4;
+    uint256 constant public minimumContribution = 10 ether;
+    uint256 constant public consensusPercentage = 50;
+    uint256 constant public maximumPremium = 1 ether;
 
     /********************************************************************************************/
     /*                                       ERROR CODES                                        */
     /********************************************************************************************/
     string private constant ERROR_NO_QUORUM = "ERROR_NO_QUORUM";
+    string private constant ERROR_FIRST_AIRLINE_ALREADY_REGISTERED = "ERROR_FIRST_AIRLINE_ALREADY_REGISTERED";
     string private constant ERROR_AIRLINE_NOT_ENLISTED = "ERROR_AIRLINE_NOT_ENLISTED";
     string private constant ERROR_AIRLINE_ALREADY_ENLISTED = "ERROR_AIRLINE_ALREADY_ENLISTED";
     string private constant ERROR_AIRLINE_IS_NOT_REGISTERED = "ERROR_AIRLINE_IS_NOT_REGISTERED";
@@ -65,8 +66,8 @@ contract FlightSuretyData is AccessControl{
         bool exists;
     }
     mapping (address => Airline) internal airlines;
-    uint256 registered;
-    uint256 registrationQueue;
+    uint256 public registered;
+    uint256 public registrationQueue;
 
     struct Flight {
         bytes32     Id;
@@ -103,15 +104,14 @@ contract FlightSuretyData is AccessControl{
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
 
-
+    event infoAddress(address val);
     /**
     * @dev Constructor
     *      The deploying account becomes contractOwner
     */
     constructor() public {
         contractOwner = msg.sender;
-        Airline storage airline_ = addAirline(msg.sender);
-        incorporateAirline(airline_);
+        emit infoAddress(msg.sender);
     }
 
     /********************************************************************************************/
@@ -166,13 +166,23 @@ contract FlightSuretyData is AccessControl{
         _;
     }
 
-    modifier canRegisterAirline() {
-        require(has(AIRLINE_REGISTRATION_ROLE, msg.sender, ""), ERROR_MISSING_AIRLINE_REGISTRATION_PERMISSION);
+    function flightExist(
+        bytes32      _flightId
+    )
+    public
+    view
+    returns(bool)
+    {
+        return flights[_flightId].exists;
+    }
+
+    modifier canRegisterAirline(address _who) {
+        require(has(AIRLINE_REGISTRATION_ROLE, _who, ""), ERROR_MISSING_AIRLINE_REGISTRATION_PERMISSION);
         _;
     }
 
-    modifier canRegisterFlight() {
-        require(has(FLIGHT_REGISTRATION_ROLE, msg.sender, ""), ERROR_MISSING_FLIGHT_REGISTRATION_PERMISSION);
+    modifier canRegisterFlight(address _who) {
+        require(has(FLIGHT_REGISTRATION_ROLE, _who, ""), ERROR_MISSING_FLIGHT_REGISTRATION_PERMISSION);
         _;
     }
 
@@ -272,13 +282,21 @@ contract FlightSuretyData is AccessControl{
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
 
+    event info(string val);
+    function registerFirstAirline(address _airlineAddress) external {
+        require(registered == 0, ERROR_FIRST_AIRLINE_ALREADY_REGISTERED);
+        Airline storage airline_ = airlines[_airlineAddress];
+        airline_ = addAirline(_airlineAddress);
+        incorporateAirline(airline_);
+    }
+
     /**
     * @dev Add an airline to the registration queue
     *
     */
-    function registerAirline(address _airlineAddress)
-                            public
-                            canRegisterAirline()
+    function registerAirline(address _registrar, address _airlineAddress)
+                            external
+                            canRegisterAirline(_registrar)
                             requireNonRegisteredAirline(_airlineAddress)
                             returns(bool success, uint256 votes, uint256 pendingVotes)
     {
@@ -292,7 +310,7 @@ contract FlightSuretyData is AccessControl{
             }
         }
 
-        success = voteAirlineXAirline(airline_);
+        success = voteAirlineXAirline(_registrar, airline_);
 
         return (success, airline_.votes, 0);
     }
@@ -307,6 +325,7 @@ contract FlightSuretyData is AccessControl{
         requireAirlineNotExist(_who)
         returns(Airline storage airline_)
     {
+        emit emitAddress(_who);
         airline_ = airlines[_who];
         airline_.id = _who;
         airline_.votes = 0;
@@ -343,7 +362,7 @@ contract FlightSuretyData is AccessControl{
 
 
     function incorporateAirline(Airline storage _airline)
-    private
+    internal
     {
         _airline.isRegistered = true;
         registered += 1;
@@ -351,13 +370,13 @@ contract FlightSuretyData is AccessControl{
         consensus = registered.mul(consensusPercentage).div(100);
     }
 
-    function voteAirlineXAirline(Airline storage _airline)
+    function voteAirlineXAirline(address _voter, Airline storage _airline)
     private
-    requireNotYetVotedAirlineXAirline(msg.sender, _airline.id)
+    requireNotYetVotedAirlineXAirline(_voter, _airline.id)
     returns(bool isRegistered_)
     {
         _airline.votes += 1;
-        _airline.votedBy[msg.sender] = true;
+        _airline.votedBy[_voter] = true;
         if (consensus <= _airline.votes){
             incorporateAirline(_airline);
             isRegistered_ = true;
@@ -366,13 +385,14 @@ contract FlightSuretyData is AccessControl{
 
 
     function registerFlight(
+        address     _registrar,
         address     _airline,
         string      _flight,
         uint256     _date
     )
         public
         requireHasQuorum()
-        canRegisterFlight()
+        canRegisterFlight(_registrar)
         requireNonRegisteredFlight(_airline, _flight, _date)
         returns(bool success, uint256 votes, uint256 pendingVotes)
     {
@@ -382,19 +402,19 @@ contract FlightSuretyData is AccessControl{
             flight_ = addFlight(_airline, _flight, _date, 0); // 0 is status code unknown
         }
 
-        success = voteAirlineXFlight(flight_);
+        success = voteAirlineXFlight(_registrar, flight_);
 
         return (success, flight_.votes, 0);
     }
 
 
-    function voteAirlineXFlight(Flight storage _flight)
+    function voteAirlineXFlight(address _voter, Flight storage _flight)
     private
-    requireNotYetVotedAirlineXFlight(msg.sender, _flight.Id)
+    requireNotYetVotedAirlineXFlight(_voter, _flight.Id)
     returns(bool isRegistered_)
     {
         _flight.votes += 1;
-        _flight.votedBy[msg.sender] = true;
+        _flight.votedBy[_voter] = true;
         if (consensus <= _flight.votes){
             incorporateFlight(_flight);
             isRegistered_ = true;
@@ -411,8 +431,10 @@ contract FlightSuretyData is AccessControl{
     *
     */
     function buy(
+        address  _buyer,
         bytes32  _flightId,
         string   _ticketNumber
+
     )
         public
         requireFlightCanBeInsured(_flightId)
@@ -427,10 +449,10 @@ contract FlightSuretyData is AccessControl{
         policy_.Id = key;
         policy_.ticketNumber = _ticketNumber;
         policy_.flightId = _flightId;
-        policy_.insured = msg.sender;
+        policy_.insured = _buyer;
         if (msg.value > maxPayablePremium){
             policy_.premium += maxPayablePremium;
-            msg.sender.transfer(msg.value - maxPayablePremium); //refund excess
+            _buyer.transfer(msg.value - maxPayablePremium); //refund excess
         }
         else{
             policy_.premium += msg.value;
@@ -448,17 +470,18 @@ contract FlightSuretyData is AccessControl{
         policy_.exists = true;
     }
 
-     event creditingInsuree(bytes32 policy);
+    event creditingInsuree(bytes32 policy);
 
     /**
     *  @dev Credits payouts to insurees
     */
     function creditInsurees
     (
+        address  _caller,
         bytes32  _flightId
     )
     external
-    canPayoutClaims()
+    canPayoutClaims(_caller)
     requireFlightExist(_flightId)
     {
 
@@ -484,6 +507,7 @@ contract FlightSuretyData is AccessControl{
         policy_.payout = policy_.premium.mul(3).div(2);
     }
 
+    event emitAddress(address _address);
      /**
     * @dev Initial funding for the insurance. Unless there are too many delayed flights
     *      resulting in insurance payouts, the contract should be self-sustaining
@@ -491,18 +515,32 @@ contract FlightSuretyData is AccessControl{
     */
     function fund
     (
+        address _caller
     )
-    public
-    requireIsRegistered(msg.sender)
+    external
+    requireIsRegistered(_caller)
     payable
     {
-        contribute();
-        Airline storage airline_ = airlines[msg.sender];
+        contribute(_caller, msg.value);
+        Airline storage airline_ = airlines[_caller];
         if (airline_.contribution >= minimumContribution){
-            addPermission(AIRLINE_REGISTRATION_ROLE, msg.sender, "");
-            addPermission(FLIGHT_REGISTRATION_ROLE, msg.sender, "");
-            addPermission(CLAIMS_PAYOUT_ROLE, msg.sender, "");
+            if (has(AIRLINE_REGISTRATION_ROLE, _caller, "") == false){
+                addPermission(AIRLINE_REGISTRATION_ROLE, _caller, "");
+                addPermission(FLIGHT_REGISTRATION_ROLE, _caller, "");
+                addPermission(CLAIMS_PAYOUT_ROLE, _caller, "");
+            }
         }
+    }
+
+    function contribute
+        (
+            address _caller,
+            uint256 _contribution
+        )
+        internal
+    {
+        Airline storage airline_ = airlines[_caller];
+        airline_.contribution += _contribution;
     }
 
     /**
@@ -511,29 +549,23 @@ contract FlightSuretyData is AccessControl{
     */
     function pay
     (
+        address  _payee,
         bytes32  _policyId
     )
         external
     {
         Policy storage policy_ = policies[_policyId];
         require(policy_.exists, ERROR_POLICY_DOES_NOT_EXIST);
-        require(policy_.insured == msg.sender, ERROR_NOT_POLICY_OWNER);
+        require(policy_.insured == _payee, ERROR_NOT_POLICY_OWNER);
         require(policy_.payout > 0, ERROR_POLICY_HAS_NO_PAYOUT);
         require(policy_.isWithdrawn == false, ERROR_CLAIM_IS_ALREADY_WITHDRAWN);
         policy_.isWithdrawn = true;
-        msg.sender.transfer(policy_.payout);
+        _payee.transfer(policy_.payout);
 
     }
 
 
-    function contribute
-                            (
-                            )
-                            internal
-    {
-        Airline storage airline_ = airlines[msg.sender];
-        airline_.contribution += msg.value;
-    }
+
 
     function getFlightKey
     (
@@ -588,12 +620,12 @@ contract FlightSuretyData is AccessControl{
     function processFlightStatus
     (
         address         _airline,
-        string memory   _flight,
+        string          _flight,
         uint256         _date,
         uint256         _timestamp,
         uint8           _statusCode
     )
-    internal
+    external
     {
         bytes32 flightId = getFlightKey(_airline, _flight, _date);
 

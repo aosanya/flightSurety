@@ -14,8 +14,8 @@ contract AccessControl{
     bytes32 public constant CLAIMS_PAYOUT_ROLE = keccak256("CLAIMS_PAYOUT_ROLE");
 
 
-    modifier canPayoutClaims() {
-        require(has(CLAIMS_PAYOUT_ROLE, msg.sender, ""), ERROR_MISSING_CLAIMS_PAYOUT_ROLE);
+    modifier canPayoutClaims(address _who) {
+        require(has(CLAIMS_PAYOUT_ROLE, _who, ""), ERROR_MISSING_CLAIMS_PAYOUT_ROLE);
         _;
     }
 

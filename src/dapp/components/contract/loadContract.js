@@ -6,27 +6,30 @@ class LoadContract extends Component {
   constructor( props ) {
     super( props );
     this.state = {
-      address : "0x8e4c131b37383e431b9cd0635d3cf9f3f628edae"
+      appAddress : ""
     }
 
   }
 
-  handleChange(e){
-    const address = e.target.value
+  handleAppAddressChange(e){
+    const appAddress = e.target.value
 
     this.setState(() => ({
-      address
+      appAddress : appAddress
     }))
   }
+
+
 
   handleLoadContract (e){
     e.preventDefault()
     this.props.dispatch(showLoading())
       this.props.contractApp.contract = null;
-      this.props.contractApp.loadContract(this.state.address, this.handleContractLoaded.bind(this))
+      this.props.contractApp.loadContract(this.state.appAddress, this.handleContractLoaded.bind(this))
   }
 
   handleContractLoaded (contract){
+      console.log("test1")
       this.props.dispatch(setContract(contract))
       this.props.dispatch(hideLoading())
   }
@@ -35,14 +38,14 @@ class LoadContract extends Component {
     return (
       <div>
         <h3 className='center'>Load Contract</h3>
-          Contract Address
+          App Contract Address
           <br/>
-          <input type="text" id="contractAddress" name="contractAddress"
-          onChange={this.handleChange.bind(this)}
-          value={this.state.address}/>
+          <input type="text" id="contractAppAddress" name="contractAppAddress"
+          onChange={this.handleAppAddressChange.bind(this)}
+          value={this.state.appAddress}/>
           <br/>
           <button className="button" onClick={this.handleLoadContract.bind(this)}>
-            Load Contract
+            Load Contracts
           </button>
       </div>
     )

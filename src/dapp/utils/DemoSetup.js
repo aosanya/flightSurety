@@ -72,9 +72,14 @@ export default class DemoSetup {
     }
 
     async initContract(callback) {
-        var contractArtifact = FlightSuretyAppJson;
-        this.contracts.FlightSuretyApp = TruffleContract(contractArtifact);
+        var contractAppArtifact = FlightSuretyAppJson;
+        this.contracts.FlightSuretyApp = TruffleContract(contractAppArtifact);
         this.contracts.FlightSuretyApp.setProvider(this.web3Provider);
+
+        var contractDataArtifact = FlightSuretyDataJson;
+        this.contracts.FlightSuretyData = TruffleContract(contractDataArtifact);
+        this.contracts.FlightSuretyData.setProvider(this.web3Provider);
+
         this.fetchEvents(callback);
         callback(this)
     }

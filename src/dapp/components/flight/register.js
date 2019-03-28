@@ -66,7 +66,7 @@ class Register extends Component {
     if (this.state.actionCalled == false){
       return (
         <div>
-            <h3 className='center'>Register Airline</h3>
+            <h3 className='center'>Register Flight</h3>
               Airline Address
               <br/>
               <input

@@ -384,26 +384,21 @@ var contract = (function(module) {
 
     at: function(address) {
       var self = this;
-
       if (address == null || typeof address != "string" || address.length != 42) {
         throw new Error("Invalid address passed to " + this._json.contract_name + ".at(): " + address);
       }
-
       var contract = new this(address);
-
       // Add thennable to allow people opt into new recommended usage.
       contract.then = function(fn) {
         return self.detectNetwork().then(function(network_id) {
           var instance = new self(address);
-
+          console.log(instance)
           return new Promise(function(accept, reject) {
             self.web3.eth.getCode(address, function(err, code) {
               if (err) return reject(err);
-
               if (!code || new BigNumber(code).eq(0)) {
                 return reject(new Error("Cannot create instance of " + self.contract_name + "; no code at address " + address));
               }
-
               accept(instance);
             });
           });

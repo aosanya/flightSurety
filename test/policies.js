@@ -91,7 +91,6 @@ contract('Flight Surety App Tests', async (accounts) => {
     it(`Buy Policy`, async function () {
 
       await config.flightSuretyApp.buy(ticket1.flight.key, ticket1.ticket, {from : ticket1.passenger, value : web3.toWei(0.5,"ether")});
-      let flightKey = await config.flightSuretyApp.getFlightKey(airline1, flight1.flightNumber, flight1.time, {from: airline2});
       let policyKey = await config.flightSuretyApp.getPolicyKey(ticket1.flight.key, ticket1.ticket);
       let policySummary = await FlightSuretyAppHelper.fetchPolicySummary(config.flightSuretyApp, policyKey);
       assert.equal(policySummary.premium, web3.toWei(0.5,"ether"), "Premium Value is wrong")
@@ -155,13 +154,6 @@ contract('Flight Surety App Tests', async (accounts) => {
     const ticket = ticket1;
 
     before('Set flight status to late', async () => {
-
-      var event = config.flightSuretyApp.creditingInsuree({fromBlock: 0})
-
-      await event.watch((err, res) => {
-          //console.log(res.args)
-      })
-
       // Submit a request for oracles to get status information for a flight
       await config.flightSuretyApp.fetchFlightStatus(airline, flight.flightNumber, flight.time, timestamp);
       // All Oracles report delay
