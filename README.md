@@ -80,7 +80,7 @@ Complete the form by entering
     App Contract Address
     Click Load Contracts
     ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/LoadContract.png?raw=true "Load Contract")
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/LoadedContract.png)
+    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/LoadedContract.png?raw=true "Loaded Contract")
 
 This will load the contract and avail more menu options.
 
@@ -90,46 +90,46 @@ This will load the contract and avail more menu options.
 ### Register Airline
     Airline Address : Use address 5 ; 0x0d1d4e623D10F9FBA5Db95830F7d3839406C6AF2
     Metamask should be one of registered airlines : Account 1 to 4
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/RegisterAirline.png)
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/RegisterAirline.png?raw=true "Register Airline")
 
 ### Fund
     Enter Contribution(minimum is 10 Ether)
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/Contribute.png)
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/Contribute.png?raw=true "Contribute")
 
 ### Airlines Summary
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/AirlinesSummary.png)
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/AirlinesSummary.png?raw=true "Airlines Summary")
 
 ### Airline Summary
     Airline Address : Use addresse 1 -> 4 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/AirlineSummary.png)
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/AirlineSummaryResult.png)
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/AirlineSummary.png?raw=true "Airline Summary")
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/AirlineSummaryResult.png?raw=true "Airline Summary")
 
 #Flights
 ### Register Flight
     Airline Address : Use addresse 1 -> 4 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
     Flight Number : A1 10001 or any random Code
     Flight Date and Time : Any date defaulted to
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/RegisterFlight.png)
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/RegisterFlight.png?raw=true "Register Flight")
 
 ### Flight Summary
     Airline Address : Use addresse 1 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
     Flight Number : AA001
     Flight Date and Time : 2019-02-01
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/FlightSummary.png)
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/FlightSummaryResult.png)
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/FlightSummary.png?raw=true "Flight Summary")
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/FlightSummaryResult.png?raw=true "Flight Summary Results")
 
 ### Request Flight Status
     Airline Address : Use addresse 1 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
     Flight Number : AA001
     Flight Date and Time : 2019-02-01
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/RequestFlightStatus.png)
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/RequestFlightStatusResult.png)
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/RequestFlightStatus.png?raw=true "Flight Status Request")
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/RequestFlightStatusResult.png?raw=true "Flight Status Request Confirmation")
 
 ### Credit Insurees
     Airline Address : Use addresse 1 ; 0x627306090abaB3A6e1400e9345bC60c78a8BEf57
     Flight Number : AA001
     Flight Date and Time : 2019-02-01
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/CreditInsurance.png)
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/CreditInsurance.png?raw=true "Credit Insurance")
 
 ## Passenger
 
@@ -140,7 +140,7 @@ This will load the contract and avail more menu options.
     Flight Date and Time : 2019-02-01
     Ticket Number : AA0010011 or any random code
     Premium : Any amooun greater than 0
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/BuyInsurance.png)
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/BuyInsurance.png?raw=true "Buy Insurance")
 
 ### Withdraw Pay
     Change Metamask Address to Address 6
@@ -148,7 +148,7 @@ This will load the contract and avail more menu options.
     Flight Number : AA001
     Flight Date and Time : 2019-02-01
     Ticket Number : AA0010011 or the code used to buy insurance
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/WithdrawPay.png)
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/WithdrawPay.png?raw=true "Withdraw Pay")
 
 ### Policy Summary
     Change Metamask Address to Address 6
@@ -156,13 +156,5 @@ This will load the contract and avail more menu options.
     Flight Number : AA001
     Flight Date and Time : 2019-02-01
     Ticket Number : AA001001 or the code used to buy insurance
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/PolicySummary.png)
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/PolicySummaryResults.png)
-
-
-
-
-
-
-
-
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/PolicySummary.png?raw=true "Policy Summary Request")
+![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/PolicySummaryResults.png?raw=true "Policy Request")
