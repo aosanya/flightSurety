@@ -26,6 +26,8 @@ contract FlightSuretyData is AccessControl{
     /*                                       ERROR CODES                                        */
     /********************************************************************************************/
     string private constant ERROR_NO_QUORUM = "ERROR_NO_QUORUM";
+    string private constant ERROR_MISSING_AUTHORIZE_CONTRACT_PERMISSION = "ERROR_MISSING_AUTHORIZE_CONTRACT_PERMISSION";
+    string private constant ERROR_CALLER_IS_NOT_AUTHORIZED = "ERROR_CALLER_IS_NOT_AUTHORIZED";
     string private constant ERROR_FIRST_AIRLINE_ALREADY_REGISTERED = "ERROR_FIRST_AIRLINE_ALREADY_REGISTERED";
     string private constant ERROR_AIRLINE_NOT_ENLISTED = "ERROR_AIRLINE_NOT_ENLISTED";
     string private constant ERROR_AIRLINE_ALREADY_ENLISTED = "ERROR_AIRLINE_ALREADY_ENLISTED";
@@ -56,6 +58,7 @@ contract FlightSuretyData is AccessControl{
     string private constant ERROR_AIRLINE_ALREADY_VOTED_FOR_FLIGHT = "ERROR_AIRLINE_HAS_ALREADY_VOTED_FOR_THIS_FLIGHT";
 
 
+    mapping (address => uint256) internal authorizedContracts;
 
     struct Airline {
         address id;
@@ -126,6 +129,12 @@ contract FlightSuretyData is AccessControl{
         _;
     }
 
+    modifier requireCallerAuthorized()
+    {
+        require(authorizedContracts[msg.sender] > 0, ERROR_CALLER_IS_NOT_AUTHORIZED);
+        _;
+    }
+
     modifier requireHasQuorum()
     {
         require(hasQuorum() == true, ERROR_NO_QUORUM);
@@ -174,6 +183,12 @@ contract FlightSuretyData is AccessControl{
     returns(bool)
     {
         return flights[_flightId].exists;
+    }
+
+
+    modifier canAuthorizeCaller(address _who) {
+        require(has(AUTHORIZE_CONTRACT_ROLE, _who, ""), ERROR_MISSING_AUTHORIZE_CONTRACT_PERMISSION);
+        _;
     }
 
     modifier canRegisterAirline(address _who) {
@@ -273,7 +288,7 @@ contract FlightSuretyData is AccessControl{
     */
     function setOperatingStatus(bool mode)
                             external
-                            requireContractOwner
+        requireContractOwner
     {
         operational = mode;
     }
@@ -283,11 +298,28 @@ contract FlightSuretyData is AccessControl{
     /********************************************************************************************/
 
     event info(string val);
-    function registerFirstAirline(address _airlineAddress) external {
+    function registerFirstAirline(address _airlineAddress)
+        external
+    {
         require(registered == 0, ERROR_FIRST_AIRLINE_ALREADY_REGISTERED);
         Airline storage airline_ = airlines[_airlineAddress];
         airline_ = addAirline(_airlineAddress);
+        addPermission(AUTHORIZE_CONTRACT_ROLE, _airlineAddress, "");
         incorporateAirline(airline_);
+    }
+
+    function authorizeContract(address _registrar)
+                            external
+                            canAuthorizeCaller(_registrar)
+    {
+        authorizedContracts[msg.sender] = 1;
+    }
+
+    function dethorizeContract(address _registrar, address _contractAddress)
+                            external
+                            canAuthorizeCaller(_registrar)
+    {
+        delete authorizedContracts[_contractAddress];
     }
 
     /**
@@ -295,10 +327,11 @@ contract FlightSuretyData is AccessControl{
     *
     */
     function registerAirline(address _registrar, address _airlineAddress)
-                            external
-                            canRegisterAirline(_registrar)
-                            requireNonRegisteredAirline(_airlineAddress)
-                            returns(bool success, uint256 votes, uint256 pendingVotes)
+        external
+        requireCallerAuthorized
+        canRegisterAirline(_registrar)
+        requireNonRegisteredAirline(_airlineAddress)
+        returns(bool success, uint256 votes, uint256 pendingVotes)
     {
         Airline storage airline_ = airlines[_airlineAddress];
         if (airline_.exists == false) {
@@ -437,6 +470,7 @@ contract FlightSuretyData is AccessControl{
 
     )
         public
+        requireCallerAuthorized
         requireFlightCanBeInsured(_flightId)
         payable
     {
@@ -481,6 +515,7 @@ contract FlightSuretyData is AccessControl{
         bytes32  _flightId
     )
     external
+    requireCallerAuthorized
     canPayoutClaims(_caller)
     requireFlightExist(_flightId)
     {
@@ -517,6 +552,7 @@ contract FlightSuretyData is AccessControl{
     (
         address _caller
     )
+    requireCallerAuthorized
     external
     requireIsRegistered(_caller)
     payable
@@ -525,6 +561,7 @@ contract FlightSuretyData is AccessControl{
         Airline storage airline_ = airlines[_caller];
         if (airline_.contribution >= minimumContribution){
             if (has(AIRLINE_REGISTRATION_ROLE, _caller, "") == false){
+                addPermission(AUTHORIZE_CONTRACT_ROLE, _caller, "");
                 addPermission(AIRLINE_REGISTRATION_ROLE, _caller, "");
                 addPermission(FLIGHT_REGISTRATION_ROLE, _caller, "");
                 addPermission(CLAIMS_PAYOUT_ROLE, _caller, "");
@@ -552,6 +589,7 @@ contract FlightSuretyData is AccessControl{
         address  _payee,
         bytes32  _policyId
     )
+        requireCallerAuthorized
         external
     {
         Policy storage policy_ = policies[_policyId];
@@ -574,7 +612,7 @@ contract FlightSuretyData is AccessControl{
         uint256 date
     )
     public
-    pure
+    requireCallerAuthorized
     returns(bytes32)
     {
         return keccak256(abi.encodePacked(airline, flight, date));
@@ -586,7 +624,7 @@ contract FlightSuretyData is AccessControl{
         string  ticketNumber
     )
     public
-    pure
+    requireCallerAuthorized
     returns(bytes32)
     {
         return keccak256(abi.encodePacked(flightId, ticketNumber));
@@ -606,7 +644,6 @@ contract FlightSuretyData is AccessControl{
         uint256         _date
     )
         public
-        view
         returns(bool)
     {
         bytes32 flightId_ = getFlightKey(_airline, _flight, _date);
@@ -626,6 +663,7 @@ contract FlightSuretyData is AccessControl{
         uint8           _statusCode
     )
     external
+    requireCallerAuthorized
     {
         bytes32 flightId = getFlightKey(_airline, _flight, _date);
 

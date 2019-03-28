@@ -9,6 +9,7 @@ contract AccessControl{
     string public constant ERROR_MISSING_FLIGHT_REGISTRATION_PERMISSION = "ERROR_MISSING_FLIGHT_REGISTRATION_PERMISSION";
     string public constant ERROR_MISSING_CLAIMS_PAYOUT_ROLE = "ERROR_MISSING_CLAIMS_PAYOUT_ROLE";
 
+    bytes32 public constant AUTHORIZE_CONTRACT_ROLE = keccak256("AUTHORIZE_CONTRACT_ROLE");
     bytes32 public constant AIRLINE_REGISTRATION_ROLE = keccak256("AIRLINE_REGISTRATION_ROLE");
     bytes32 public constant FLIGHT_REGISTRATION_ROLE = keccak256("FLIGHT_REGISTRATION_ROLE");
     bytes32 public constant CLAIMS_PAYOUT_ROLE = keccak256("CLAIMS_PAYOUT_ROLE");
@@ -20,6 +21,7 @@ contract AccessControl{
     }
 
     constructor() public {
+        addRole(AUTHORIZE_CONTRACT_ROLE);
         addRole(AIRLINE_REGISTRATION_ROLE);
         addRole(FLIGHT_REGISTRATION_ROLE);
         addRole(CLAIMS_PAYOUT_ROLE);
@@ -43,7 +45,7 @@ contract AccessControl{
         bytes32 thisRoleHash = roleHash(_role);
         require(roles[thisRoleHash] == true, "Role Does Not Exists");
         bytes32 thisPermissionHash = permissionHash(_who, _role, _for);
-        require(permissions[thisPermissionHash] == false, "Permission Already Exists");
+        //require(permissions[thisPermissionHash] == false, "Permission Already Exists");
         permissions[thisPermissionHash] = true;
     }
 

@@ -89,6 +89,7 @@ contract FlightSuretyApp {
         contractOwner = msg.sender;
         flightSuretyData = FlightSuretyData(dataContract);
         flightSuretyData.registerFirstAirline(msg.sender);
+        authorizeDataContract();
     }
 
     /********************************************************************************************/
@@ -333,6 +334,11 @@ contract FlightSuretyApp {
         return flightSuretyData.getPolicyKey(_flightId, _ticketNumber);
     }
 
+
+function authorizeDataContract() internal{
+    return flightSuretyData.authorizeContract(msg.sender);
+}
+
 // region ORACLE MANAGEMENT
 
     // Incremented to add pseudo-randomness at various points
@@ -498,6 +504,8 @@ contract FlightSuretyData{
     uint256 public minimumContribution;
     uint256 public consensusPercentage;
     uint256 public maximumPremium;
+
+    function authorizeContract(address _registrar) external;
 
     function registerFirstAirline(address _airlineAddress) external;
 
