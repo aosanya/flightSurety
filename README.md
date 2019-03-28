@@ -79,7 +79,7 @@ On the home page, click 'Load Existing Contract'.
 Complete the form by entering
     App Contract Address
     Click Load Contracts
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/LoadContract.png))
+    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/LoadContract.png?raw=true "Load Contract")
     ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/LoadedContract.png)
 
 This will load the contract and avail more menu options.
