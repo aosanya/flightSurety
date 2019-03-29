@@ -149,7 +149,6 @@ export default class ContractApp {
 
     async setContract(instance) {
         this.contract = instance
-        console.log("Contract Set")
         console.log(this.contract)
     }
 
@@ -195,12 +194,10 @@ export default class ContractApp {
     }
 
     async buyPolicy(contractInstance, callback, address, flightNumber, dateTime, ticketNumber, premium) {
-        console.log("test 1")
         try{
             const flightKey = await contractInstance.getFlightKey(address, flightNumber, dateTime / 1000);
             const callAction = await contractInstance.buy(flightKey, ticketNumber, {value : web3.toWei(premium,"ether")});
             return callback({successful: true, tx : callAction, message : "Insurance purchased successfully"})
-            console.log("test 1")
         }
         catch(error){
             return callback({successful: false, tx : null, message : error.toString()})

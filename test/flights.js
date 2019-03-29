@@ -50,16 +50,16 @@ contract('Flight Surety App Tests', async (accounts) => {
 
   context('Require Quorum', () => {
     before('Register Airlines', async () => {
-      await config.flightSuretyApp.fund({from: airline1, value: web3.toWei(10,"ether")});
+      await config.flightSuretyApp.fund({from: airline1, value: config.web3.utils.toWei("10","ether")});
 
       await config.flightSuretyApp.registerAirline(airline2, {from: airline1});
-      await config.flightSuretyApp.fund({from: airline2, value: web3.toWei(10,"ether")});
+      await config.flightSuretyApp.fund({from: airline2, value: config.web3.utils.toWei("10","ether")});
 
       await config.flightSuretyApp.registerAirline(airline3, {from: airline2});
-      await config.flightSuretyApp.fund({from: airline3, value: web3.toWei(10,"ether")});
+      await config.flightSuretyApp.fund({from: airline3, value: config.web3.utils.toWei("10","ether")});
 
       await config.flightSuretyApp.registerAirline(airline4, {from: airline3});
-      await config.flightSuretyApp.fund({from: airline4, value: web3.toWei(10,"ether")});
+      await config.flightSuretyApp.fund({from: airline4, value: config.web3.utils.toWei("10","ether")});
     });
 
     it(`Can Register Flight`, async function () {

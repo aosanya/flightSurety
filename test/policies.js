@@ -47,16 +47,16 @@ contract('Flight Surety App Tests', async (accounts) => {
   var config;
   before('setup contract', async () => {
     config = await Test.Config(accounts);
-    await config.flightSuretyApp.fund({from: airline1, value: web3.toWei(10,"ether")});
+    await config.flightSuretyApp.fund({from: airline1, value: config.web3.utils.toWei("10","ether")});
 
     await config.flightSuretyApp.registerAirline(airline2, {from: airline1});
-    await config.flightSuretyApp.fund({from: airline2, value: web3.toWei(10,"ether")});
+    await config.flightSuretyApp.fund({from: airline2, value: config.web3.utils.toWei("10","ether")});
 
     await config.flightSuretyApp.registerAirline(airline3, {from: airline2});
-    await config.flightSuretyApp.fund({from: airline3, value: web3.toWei(10,"ether")});
+    await config.flightSuretyApp.fund({from: airline3, value: config.web3.utils.toWei("10","ether")});
 
     await config.flightSuretyApp.registerAirline(airline4, {from: airline3});
-    await config.flightSuretyApp.fund({from: airline4, value: web3.toWei(10,"ether")});
+    await config.flightSuretyApp.fund({from: airline4, value: config.web3.utils.toWei("10","ether")});
 
 
     //Register Flight 1
@@ -90,10 +90,10 @@ contract('Flight Surety App Tests', async (accounts) => {
   context('Policy Purchase', () => {
     it(`Buy Policy`, async function () {
 
-      await config.flightSuretyApp.buy(ticket1.flight.key, ticket1.ticket, {from : ticket1.passenger, value : web3.toWei(0.5,"ether")});
+      await config.flightSuretyApp.buy(ticket1.flight.key, ticket1.ticket, {from : ticket1.passenger, value : config.web3.utils.toWei("0.5","ether")});
       let policyKey = await config.flightSuretyApp.getPolicyKey(ticket1.flight.key, ticket1.ticket);
       let policySummary = await FlightSuretyAppHelper.fetchPolicySummary(config.flightSuretyApp, policyKey);
-      assert.equal(policySummary.premium, web3.toWei(0.5,"ether"), "Premium Value is wrong")
+      assert.equal(policySummary.premium, config.web3.utils.toWei("0.5","ether"), "Premium Value is wrong")
 
       let flightSummary = await FlightSuretyAppHelper.fetchFlightSummary(config.flightSuretyApp, ticket1.flight.key);
       assert.equal(flightSummary.policyCount, 1, "Policy count is wrong")
@@ -102,46 +102,46 @@ contract('Flight Surety App Tests', async (accounts) => {
 
     it(`Buy Policy and refund`, async function () {
       let balanceBefore = web3.eth.getBalance(ticket2.passenger);
-      await config.flightSuretyApp.buy(ticket2.flight.key, ticket2.ticket, {from : ticket2.passenger, value : web3.toWei(2,"ether")});
+      await config.flightSuretyApp.buy(ticket2.flight.key, ticket2.ticket, {from : ticket2.passenger, value : config.web3.utils.toWei("2","ether")});
 
       let balanceAfter = web3.eth.getBalance(ticket2.passenger);
       let actualCost = balanceBefore - balanceAfter
-      let expectedGasPrice = actualCost - web3.toWei(1,"ether")
+      let expectedGasPrice = actualCost - config.web3.utils.toWei("1","ether")
       let actualGasUsed = web3.eth.getBlock(web3.eth.blockNumber).gasUsed
 
       assert.equal(actualGasUsed, Number((expectedGasPrice/100000000000).toFixed(0)), "Gas difference can only stem from wrong account transfers")
       let policyKey = await config.flightSuretyApp.getPolicyKey(ticket2.flight.key, ticket2.ticket);
       let policySummary = await FlightSuretyAppHelper.fetchPolicySummary(config.flightSuretyApp, policyKey);
-      assert.equal(policySummary.premium, web3.toWei(1,"ether"), "Premium Value is wrong")
+      assert.equal(policySummary.premium, config.web3.utils.toWei("1","ether"), "Premium Value is wrong")
     });
 
     it(`Buy Policy, top up and refund`, async function () {
       let ticket = ticket3;
       let balanceBefore = web3.eth.getBalance(ticket3.passenger);
-      await config.flightSuretyApp.buy(ticket.flight.key, ticket.ticket, {from : ticket3.passenger, value : web3.toWei(0.4,"ether")});
+      await config.flightSuretyApp.buy(ticket.flight.key, ticket.ticket, {from : ticket3.passenger, value : config.web3.utils.toWei("0.4","ether")});
 
       let balanceAfter = web3.eth.getBalance(ticket3.passenger);
       let actualCost = balanceBefore - balanceAfter
-      let expectedGasPrice = actualCost - web3.toWei(0.4,"ether")
+      let expectedGasPrice = actualCost - config.web3.utils.toWei("0.4","ether")
       let actualGasUsed = web3.eth.getBlock(web3.eth.blockNumber).gasUsed
 
       assert.equal(actualGasUsed, Number((expectedGasPrice/100000000000).toFixed(0)), "Gas difference can only stem from wrong account transfers")
       let policyKey = await config.flightSuretyApp.getPolicyKey(ticket.flight.key, ticket.ticket);
       let policySummary = await FlightSuretyAppHelper.fetchPolicySummary(config.flightSuretyApp, policyKey);
-      assert.equal(policySummary.premium, web3.toWei(0.4,"ether"), "Premium Value is wrong")
+      assert.equal(policySummary.premium, config.web3.utils.toWei("0.4","ether"), "Premium Value is wrong")
 
       //Top up and over pay
       balanceBefore = web3.eth.getBalance(ticket3.passenger);
-      await config.flightSuretyApp.buy(ticket.flight.key, ticket.ticket, {from : ticket3.passenger, value : web3.toWei(0.7,"ether")});
+      await config.flightSuretyApp.buy(ticket.flight.key, ticket.ticket, {from : ticket3.passenger, value : config.web3.utils.toWei("0.7","ether")});
 
       balanceAfter = web3.eth.getBalance(ticket3.passenger);
       actualCost = balanceBefore - balanceAfter
-      expectedGasPrice = actualCost - web3.toWei(0.6,"ether")
+      expectedGasPrice = actualCost - config.web3.utils.toWei("0.6","ether")
       actualGasUsed = web3.eth.getBlock(web3.eth.blockNumber).gasUsed
 
       assert.equal(actualGasUsed, Number((expectedGasPrice/100000000000).toFixed(0)), "Gas difference can only stem from wrong account transfers")
       policySummary = await FlightSuretyAppHelper.fetchPolicySummary(config.flightSuretyApp, policyKey);
-      assert.equal(policySummary.premium, web3.toWei(1,"ether"), "Premium Value is wrong")
+      assert.equal(policySummary.premium, config.web3.utils.toWei("1","ether"), "Premium Value is wrong")
     });
   })
 

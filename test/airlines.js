@@ -3,6 +3,7 @@ var Test = require('../utils/testConfig.js');
 var {FlightSuretyAppHelper} = require('../utils/FlightSuretyAppHelper.js');
 var BigNumber = require('bignumber.js');
 
+
 contract('Flight Surety App Tests', async (accounts) => {
   const airline1 = accounts[0]
   const airline2 = accounts[1]
@@ -19,6 +20,7 @@ contract('Flight Surety App Tests', async (accounts) => {
   var config;
   before('setup contract', async () => {
     config = await Test.Config(accounts);
+
   });
 
   context('Initialization', () => {
@@ -31,9 +33,10 @@ contract('Flight Surety App Tests', async (accounts) => {
     });
 
     it(`First airline has contributed and registration roles have been awarded`, async function () {
-      await config.flightSuretyApp.fund({from: airline1, value: web3.toWei(10,"ether")});
+
+      await config.flightSuretyApp.fund({from: airline1, value: config.web3.utils.toWei("10","ether")});
       var airline = await FlightSuretyAppHelper.getAirlineSummary(config.flightSuretyApp, airline1);
-      assert.equal(airline.contribution, web3.toWei(10,"ether"), "does not have contribution");
+      assert.equal(airline.contribution, config.web3.utils.toWei("10","ether"), "does not have contribution");
     });
 
   })
@@ -50,7 +53,7 @@ contract('Flight Surety App Tests', async (accounts) => {
         assert.equal(airlinesSummary.registrationQueue, 0, "registration queue count is wrong");
         assert.equal(airlinesSummary.consensus, 1, "required consensus is wrong");
 
-        await config.flightSuretyApp.fund({from: airline2, value: web3.toWei(10,"ether")});
+        await config.flightSuretyApp.fund({from: airline2, value: config.web3.utils.toWei("10","ether")});
       }
     )
 
@@ -64,7 +67,7 @@ contract('Flight Surety App Tests', async (accounts) => {
         assert.equal(airlinesSummary.registrationQueue, 0, "registration queue count is wrong");
         assert.equal(airlinesSummary.consensus, 1, "required consensus is wrong");
 
-        await config.flightSuretyApp.fund({from: airline3, value: web3.toWei(10,"ether")});
+        await config.flightSuretyApp.fund({from: airline3, value: config.web3.utils.toWei("10","ether")});
       }
     )
 
@@ -98,7 +101,7 @@ contract('Flight Surety App Tests', async (accounts) => {
         assert.equal(airlinesSummary.registrationQueue, 0, "registration queue count is wrong");
         assert.equal(airlinesSummary.consensus, 2, "required consensus is wrong");
 
-        await config.flightSuretyApp.fund({from: airline4, value: web3.toWei(10,"ether")});
+        await config.flightSuretyApp.fund({from: airline4, value: config.web3.utils.toWei("10","ether")});
       }
     )
 
@@ -216,9 +219,9 @@ contract('Flight Surety App Tests', async (accounts) => {
         assert.equal(airline.isRegistered, true, "airline should be registered");
 
 
-        await config.flightSuretyApp.fund({from: airline7, value: web3.toWei(10,"ether")});
+        await config.flightSuretyApp.fund({from: airline7, value: config.web3.utils.toWei("10","ether")});
         var airline = await FlightSuretyAppHelper.getAirlineSummary(config.flightSuretyApp, airline7);
-        assert.equal(airline.contribution, web3.toWei(10,"ether"), "airline has wrong contribution");
+        assert.equal(airline.contribution, config.web3.utils.toWei("10","ether"), "airline has wrong contribution");
       })
     }
   )
