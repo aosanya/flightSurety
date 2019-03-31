@@ -30,8 +30,19 @@ contract('Flight Surety App Tests', async (accounts) => {
   const oracle8 = accounts[17]
   const oracle9 = accounts[18]
   const oracle10 = accounts[19]
+  const oracle11 = accounts[20]
+  const oracle12 = accounts[21]
+  const oracle13 = accounts[22]
+  const oracle14 = accounts[23]
+  const oracle15 = accounts[24]
+  const oracle16 = accounts[25]
+  const oracle17 = accounts[26]
+  const oracle18 = accounts[27]
+  const oracle19 = accounts[28]
+  const oracle20 = accounts[29]
 
-  const oracles = [oracle1, oracle2, oracle3, oracle4, oracle5, oracle6, oracle7, oracle8, oracle9, oracle10]
+  const oracles = [oracle1, oracle2, oracle3, oracle4, oracle5, oracle6, oracle7, oracle8, oracle9, oracle10,
+                   oracle11, oracle12, oracle13, oracle14, oracle15, oracle16, oracle17, oracle18, oracle19, oracle20]
 
 
   const flight1 = {"airline" : airline1, "flightNumber" : "AA001", "time" : new Date(2019,01,01,08,00) / 1000, key : "0xcbaa35fdc6f4b18e88d9ed55d4934a2b7d6c9c1d9a348db3f6f133d3d9bf4c65"}
@@ -44,9 +55,18 @@ contract('Flight Surety App Tests', async (accounts) => {
   const ticket2 = {"passenger" : passenger2, "flight" : flight1, "ticket" : "AA001002"}
   const ticket3 = {"passenger" : passenger3, "flight" : flight1, "ticket" : "BB001001"}
 
+
+
+
+
   var config;
   before('setup contract', async () => {
+
     config = await Test.Config(accounts);
+
+    console.log("FlightSuretyData Address is : " + config.flightSuretyData.address)
+    console.log("FlightSuretyApp Address is : " + config.flightSuretyApp.address)
+
     await config.flightSuretyApp.fund({from: airline1, value: config.web3.utils.toWei("10","ether")});
 
     await config.flightSuretyApp.registerAirline(airline2, {from: airline1});
@@ -101,13 +121,16 @@ contract('Flight Surety App Tests', async (accounts) => {
 
 
     it(`Buy Policy and refund`, async function () {
-      let balanceBefore = web3.eth.getBalance(ticket2.passenger);
+      let balanceBefore =  await config.web3.eth.getBalance(ticket2.passenger);
       await config.flightSuretyApp.buy(ticket2.flight.key, ticket2.ticket, {from : ticket2.passenger, value : config.web3.utils.toWei("2","ether")});
 
-      let balanceAfter = web3.eth.getBalance(ticket2.passenger);
-      let actualCost = balanceBefore - balanceAfter
-      let expectedGasPrice = actualCost - config.web3.utils.toWei("1","ether")
-      let actualGasUsed = web3.eth.getBlock(web3.eth.blockNumber).gasUsed
+      let balanceAfter = await config.web3.eth.getBalance(ticket2.passenger);
+
+
+       let actualCost = balanceBefore - balanceAfter
+       let expectedGasPrice = actualCost - await config.web3.utils.toWei("1","ether")
+       let block = await config.web3.eth.getBlock(await config.web3.eth.getBlockNumber())
+      let actualGasUsed = await block.gasUsed
 
       assert.equal(actualGasUsed, Number((expectedGasPrice/100000000000).toFixed(0)), "Gas difference can only stem from wrong account transfers")
       let policyKey = await config.flightSuretyApp.getPolicyKey(ticket2.flight.key, ticket2.ticket);
@@ -117,13 +140,14 @@ contract('Flight Surety App Tests', async (accounts) => {
 
     it(`Buy Policy, top up and refund`, async function () {
       let ticket = ticket3;
-      let balanceBefore = web3.eth.getBalance(ticket3.passenger);
+      let balanceBefore = await config.web3.eth.getBalance(ticket3.passenger);
       await config.flightSuretyApp.buy(ticket.flight.key, ticket.ticket, {from : ticket3.passenger, value : config.web3.utils.toWei("0.4","ether")});
 
-      let balanceAfter = web3.eth.getBalance(ticket3.passenger);
+      let balanceAfter = await config.web3.eth.getBalance(ticket3.passenger);
       let actualCost = balanceBefore - balanceAfter
       let expectedGasPrice = actualCost - config.web3.utils.toWei("0.4","ether")
-      let actualGasUsed = web3.eth.getBlock(web3.eth.blockNumber).gasUsed
+      var block = await config.web3.eth.getBlock(await config.web3.eth.getBlockNumber())
+      var actualGasUsed = await block.gasUsed
 
       assert.equal(actualGasUsed, Number((expectedGasPrice/100000000000).toFixed(0)), "Gas difference can only stem from wrong account transfers")
       let policyKey = await config.flightSuretyApp.getPolicyKey(ticket.flight.key, ticket.ticket);
@@ -131,13 +155,14 @@ contract('Flight Surety App Tests', async (accounts) => {
       assert.equal(policySummary.premium, config.web3.utils.toWei("0.4","ether"), "Premium Value is wrong")
 
       //Top up and over pay
-      balanceBefore = web3.eth.getBalance(ticket3.passenger);
+      balanceBefore = await config.web3.eth.getBalance(ticket3.passenger);
       await config.flightSuretyApp.buy(ticket.flight.key, ticket.ticket, {from : ticket3.passenger, value : config.web3.utils.toWei("0.7","ether")});
 
-      balanceAfter = web3.eth.getBalance(ticket3.passenger);
+      balanceAfter = await config.web3.eth.getBalance(ticket3.passenger);
       actualCost = balanceBefore - balanceAfter
       expectedGasPrice = actualCost - config.web3.utils.toWei("0.6","ether")
-      actualGasUsed = web3.eth.getBlock(web3.eth.blockNumber).gasUsed
+      block = await config.web3.eth.getBlock(await config.web3.eth.getBlockNumber())
+      actualGasUsed = await block.gasUsed
 
       assert.equal(actualGasUsed, Number((expectedGasPrice/100000000000).toFixed(0)), "Gas difference can only stem from wrong account transfers")
       policySummary = await FlightSuretyAppHelper.fetchPolicySummary(config.flightSuretyApp, policyKey);
@@ -224,5 +249,5 @@ contract('Flight Surety App Tests', async (accounts) => {
 
     })
 
-  });
+   });
 });

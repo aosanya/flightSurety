@@ -45,10 +45,10 @@
     "react-datetime-picker": "^2.3.0",
     "react-dom": "^16.8.6",
     "react-redux": "^5.0.0",
-    "redux": "^3.0.0",
     "react-redux-loading": "^1.0.1",
     "react-router-dom": "^5.0.0",
+    "redux": "^3.0.0",
     "truffle-hdwallet-provider": "^1.0.4",
-    "web3": "^1.0.0-beta.51"
+    "web3": "1.0.0-beta.37"
   }
 }

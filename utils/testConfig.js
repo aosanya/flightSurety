@@ -30,8 +30,7 @@ var Config = async function(accounts) {
     //Um gottes will. Make the web3 function for different providers
     const web3 = new Web3(Web3.givenProvider)
 
-    console.log("FlightSuretyData Address is : " + flightSuretyData.address)
-    console.log("FlightSuretyApp Address is : " + flightSuretyApp.address)
+
     //console.log("Contract Address is : " + flightSuretyApp)
 
     return {

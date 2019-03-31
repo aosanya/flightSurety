@@ -6,7 +6,7 @@ import FlightSuretyDataJson from '../../../build/contracts/FlightSuretyData.json
 
 export default class ContractApp {
     constructor(callback) {
-
+        console.log("test1")
         //let config = Config[network];
         //this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
         // this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
@@ -26,7 +26,7 @@ export default class ContractApp {
     }
 
     async initWeb3(callback) {
-
+        console.log("loading app")
         // Find or Inject Web3 Provider
         /// Modern dapp browsers...
         if (window.ethereum) {

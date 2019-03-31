@@ -29,7 +29,6 @@ class LoadContract extends Component {
   }
 
   handleContractLoaded (contract){
-      console.log("test1")
       this.props.dispatch(setContract(contract))
       this.props.dispatch(hideLoading())
   }
