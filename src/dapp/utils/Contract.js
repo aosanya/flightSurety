@@ -224,6 +224,7 @@ export default class ContractApp {
     }
 
     async fetchFlightStatus(contractInstance, callback, address, flightNumber, dateTime) {
+        console.log(address, flightNumber, dateTime)
         try{
             const payload = {
                 airline: address,

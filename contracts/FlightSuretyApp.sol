@@ -382,6 +382,8 @@ function authorizeDataContract() internal{
     // they fetch data and submit a response
     event OracleRequest(uint32 index, address airline, string flight, uint256 date, uint256 timestamp);
 
+    event OracleResponse(uint32 index, address airline, string flight, uint256 date, uint256 timestamp, uint8 status, string info);
+
     // Register an oracle with the contract
     function registerOracle
                             (
@@ -412,6 +414,7 @@ function authorizeDataContract() internal{
         return oracles[msg.sender].indexes;
     }
 
+
     // Called by oracle when a response is available to an outstanding request
     // For the response to be accepted, there must be a pending request that is open
     // and matches one of the three Indexes randomly assigned to the oracle at the
@@ -427,11 +430,12 @@ function authorizeDataContract() internal{
     )
     external
     {
+        emit OracleResponse(_index, airline, flight, date, now, statusCode, "Response recieved");
         require((oracles[msg.sender].indexes[0] == _index) || (oracles[msg.sender].indexes[1] == _index) || (oracles[msg.sender].indexes[2] == _index), "Index does not match oracle request");
-
+        emit OracleResponse(_index, airline, flight, date, now, statusCode, "Index matches");
         bytes32 key = keccak256(abi.encodePacked(_index, airline, flight, date, timestamp));
         require(oracleResponses[key].isOpen, "Flight or timestamp do not match oracle request");
-
+        emit OracleResponse(_index, airline, flight, date, now, statusCode, "Response is valid");
         oracleResponses[key].responses[statusCode].push(msg.sender);
 
         // Information isn't considered verified until at least MIN_RESPONSES
@@ -472,6 +476,13 @@ function authorizeDataContract() internal{
         return indexes;
     }
 
+    function getSender
+    ()
+    public
+    returns (address)
+    {
+        return msg.sender;
+    }
     // Returns array of three non-duplicating integers from 0-9
     function getRandomIndex
     (
@@ -480,7 +491,7 @@ function authorizeDataContract() internal{
     internal
     returns (uint32)
     {
-        uint32 maxValue = 5;
+        uint32 maxValue = 7;
 
         // Pseudo random number...the incrementing nonce adds variation
         uint8 random = uint8(uint256(keccak256(abi.encodePacked(blockhash(block.number - nonce++), account))) % maxValue);
