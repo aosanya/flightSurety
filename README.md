@@ -71,7 +71,8 @@ Run the Policies Test :
 
 Take note of the contract address e.g.
     Contract: Flight Surety App Tests
-    FlightSuretyApp Address is : 0x52a2f2ea2f8d07d9fa0d9d73f1b9377fbab8fdbd
+    FlightSuretyData Address is : <Data Address>
+    FlightSuretyApp Address is : <App Address>
         Policy Purchase
         ✓ Buy Policy (1482ms)...
 
@@ -83,6 +84,9 @@ Complete the form by entering
     ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/LoadedContract.png?raw=true "Loaded Contract")
 
 This will load the contract and avail more menu options.
+
+### Start Oracle Server
+Update the src/server/config.json with the Test Addresses. The server should reload,replay the test events and listen for new calls.
 
 # Demo Test Data
 

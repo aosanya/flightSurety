@@ -430,6 +430,7 @@ function authorizeDataContract() internal{
     )
     external
     {
+
         emit OracleResponse(_index, airline, flight, date, now, statusCode, "Response recieved");
         require((oracles[msg.sender].indexes[0] == _index) || (oracles[msg.sender].indexes[1] == _index) || (oracles[msg.sender].indexes[2] == _index), "Index does not match oracle request");
         emit OracleResponse(_index, airline, flight, date, now, statusCode, "Index matches");
@@ -441,7 +442,7 @@ function authorizeDataContract() internal{
         // Information isn't considered verified until at least MIN_RESPONSES
         // oracles respond with the *** same *** information
         emit OracleReport(airline, flight, date, timestamp,  statusCode);
-        if (oracleResponses[key].responses[statusCode].length >= MIN_RESPONSES) {
+        if (oracleResponses[key].responses[statusCode].length == MIN_RESPONSES) {
 
             emit FlightStatusInfo(airline, flight, date, timestamp, statusCode);
 
@@ -476,13 +477,7 @@ function authorizeDataContract() internal{
         return indexes;
     }
 
-    function getSender
-    ()
-    public
-    returns (address)
-    {
-        return msg.sender;
-    }
+
     // Returns array of three non-duplicating integers from 0-9
     function getRandomIndex
     (
@@ -504,6 +499,17 @@ function authorizeDataContract() internal{
     }
 
 // endregion
+
+    event kcufEvent(uint32 index);
+
+    function kcufCheck
+    (uint32 _index)
+    public
+    returns (address)
+    {
+        emit kcufEvent(_index);
+        return msg.sender;
+    }
 
 }
 
