@@ -8,18 +8,19 @@ var oracles = [];
 var indices = {};
 
 const codes = [0, 10, 20, 30, 40, 50];
+console.log(Web3);
 
 let config = Config['localhost'];
 var provider = new Web3.providers.WebsocketProvider(config.url.replace('http', 'ws'));
 var web3 = new Web3(provider);
+
 web3.eth.defaultAccount = web3.eth.accounts[0];
 var flightSuretyApp = new web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
 
-
-loadAccounts(loadIndices, startWatching)
+//loadAccounts(loadIndices, startWatching)
 function loadAccounts(callBack1, callback2){
   web3.eth.getAccounts(function (error, result) {
-    if (error) console.log(error)
+  if (error) console.log(error)
       accounts = result
       web3.eth.defaultAccount = accounts[0];
       callBack1(callback2)
@@ -52,8 +53,14 @@ function startWatching(){
     if (error) console.log(error)
     console.log("flight status updated")
   });
-}
 
+  flightSuretyApp.events.kcufEvent({
+    fromBlock: 0
+  }, function (error, event) {
+    if (error) console.log(error)
+    console.log("Event Successful")
+  });
+}
 
 function randomOracleResponse(requestEvent){
   let index = requestEvent.returnValues[0]
@@ -64,18 +71,27 @@ function randomOracleResponse(requestEvent){
   let response = codes[Math.floor(Math.random()*4) + 1]
 
   for (var i = 0; i < oracles.length; i++) {
-    var oracleAddress = oracles[i]
+     var oracleAddress = oracles[i]
 
-    if (indices[oracleAddress].includes(requestEvent.returnValues[0])){
-        var tx = {from: oracleAddress};
-        try{
-          flightSuretyApp.methods.submitOracleResponse(index, airline, flight, date, timestamp, response).call(tx,(error, result) => {
-              if (error) console.log(error)
-          })
-        }
-        catch(e){
-          console.log(e)
-        }
+     if (indices[oracleAddress].includes(requestEvent.returnValues[0])){
+        console.log("-- -- --")
+        console.log(indices[oracleAddress])
+        console.log(requestEvent.returnValues[0])
+
+
+         var tx = {from: oracleAddress};
+         try{
+          // flightSuretyApp.methods.kcufCheck(1).call(tx,(error, result) => {
+          //   if (error) console.log(error)
+          //   console.log(result)
+          // })
+           flightSuretyApp.methods.submitOracleResponse.call(index, airline, flight, date, timestamp, response).call(tx,(error, result) => {
+               if (error) console.log(error)
+           })
+         }
+         catch(e){
+           //console.log(e)
+         }
     }
   }
 }

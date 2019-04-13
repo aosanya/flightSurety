@@ -269,12 +269,13 @@ export default class ContractApp {
      async fetchAirlineSummary(contractInstance, callback, airlineAddress) {
         try{
             let summary = await contractInstance.fetchAirlineSummary(airlineAddress);
+            console.log(summary)
             callback({
                 successful: true, message : 'Airline summary fetched successful',
                 summary : {
                     votes : {title : 'Votes', value : summary[0].toNumber()},
                     isRegistered : {title : 'Is Registered', value : summary[1]},
-                    contribution : {title : 'Contribution', value : this.web3.fromWei(summary[2].toNumber(), 'ether')}
+                    contribution : {title : 'Contribution', value : this.web3.fromWei(summary[2], 'ether')}
                 }
             })
         }

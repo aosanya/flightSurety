@@ -14,7 +14,7 @@ var FlightSuretyAppHelper = {
         return {
                 votes : airlineSummary[0].toNumber(),
                 isRegistered : airlineSummary[1],
-                contribution : airlineSummary[2].toNumber(),
+                contribution : parseFloat(airlineSummary[2]),
         }
      },
      fetchFlightSummary : async function(instance, flightId) {
