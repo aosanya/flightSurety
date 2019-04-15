@@ -21,11 +21,14 @@ import LoadContract from "./contract/loadContract"
 import Nav from "./nav"
 import TopBar from "./TopBar"
 
+import { setContract } from '../actions/contract'
+import { showLoading, hideLoading } from 'react-redux-loading'
 
 import ContractApp from '../utils/Contract';
 class App extends React.Component {
     constructor( props ) {
         super( props );
+        this.props.dispatch(showLoading())
         this.state = {contractApp : new ContractApp(this.contractChanged.bind(this))}
     }
 
@@ -37,6 +40,8 @@ class App extends React.Component {
         this.setState(() => ({
             contract
         }))
+        this.props.dispatch(setContract(contract))
+        this.props.dispatch(hideLoading())
     }
 
     render() {

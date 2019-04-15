@@ -358,6 +358,7 @@ function authorizeDataContract() internal{
 
     // Track all registered oracles
     mapping(address => Oracle) private oracles;
+    uint256 public oracleCount;
 
     // Model for responses from oracles
     struct ResponseInfo {
@@ -384,6 +385,8 @@ function authorizeDataContract() internal{
 
     event OracleResponse(uint32 index, address airline, string flight, uint256 date, uint256 timestamp, uint8 status, string info);
 
+    event OracleRegistered(address oracleAddress);
+
     // Register an oracle with the contract
     function registerOracle
                             (
@@ -393,13 +396,16 @@ function authorizeDataContract() internal{
     {
         // Require registration fee
         require(msg.value >= REGISTRATION_FEE, "Registration fee is required");
-
+        require(oracles[msg.sender].isRegistered == false, "Oracle is already registered");
         uint32[3] memory indexes = generateIndexes(msg.sender);
 
         oracles[msg.sender] = Oracle({
             isRegistered: true,
             indexes: indexes
         });
+        oracleCount = oracleCount + 1;
+
+        emit OracleRegistered(msg.sender);
     }
 
     function getMyIndexes

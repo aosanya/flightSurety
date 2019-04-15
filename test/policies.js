@@ -64,9 +64,6 @@ contract('Flight Surety App Tests', async (accounts) => {
 
     config = await Test.Config(accounts);
 
-    console.log("FlightSuretyData Address is : " + config.flightSuretyData.address)
-    console.log("FlightSuretyApp Address is : " + config.flightSuretyApp.address)
-
     await config.flightSuretyApp.fund({from: airline1, value: config.web3.utils.toWei("10","ether")});
 
     await config.flightSuretyApp.registerAirline(airline2, {from: airline1});
@@ -181,6 +178,7 @@ contract('Flight Surety App Tests', async (accounts) => {
     before('Set flight status to late', async () => {
       // Submit a request for oracles to get status information for a flight
       await config.flightSuretyApp.fetchFlightStatus(airline, flight.flightNumber, flight.time, timestamp);
+
       // All Oracles report delay
       for(a = 0; a < oracles.length; a++) {
         oracle = oracles[a];
@@ -198,6 +196,8 @@ contract('Flight Surety App Tests', async (accounts) => {
       }
 
     })
+
+
 
     it(`Credit Insurees`, async function () {
       let policyKey = await config.flightSuretyApp.getPolicyKey(ticket.flight.key, ticket.ticket);

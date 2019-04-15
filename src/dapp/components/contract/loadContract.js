@@ -19,8 +19,6 @@ class LoadContract extends Component {
     }))
   }
 
-
-
   handleLoadContract (e){
     e.preventDefault()
     this.props.dispatch(showLoading())

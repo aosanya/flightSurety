@@ -1,11 +1,14 @@
 import React, { Component } from 'react'
 import { NavLink } from 'react-router-dom'
 import { connect } from 'react-redux'
-
+import { showLoading, hideLoading } from 'react-redux-loading'
 class Nav extends Component {
   render() {
     const { address } = this.props
-
+    if (address == undefined){
+      this.props.dispatch(showLoading())
+    }
+    console.log(address)
     return (
       <div className="content">
       <nav className='nav'>
@@ -14,7 +17,7 @@ class Nav extends Component {
             <NavLink to='/' exact activeClassName='active'>Home</NavLink>
           </li>
 
-          {address !== null &&
+          {(address !== undefined) &&
             <li className="nav"><a href="#">Airlines</a>
               <ul className="nav dropdown">
                 <li className="nav">
@@ -33,7 +36,7 @@ class Nav extends Component {
             </li>
           }
 
-          {address !== null &&
+          {address !== undefined &&
             <li className="nav"><a href="#">Flights</a>
               <ul className="nav dropdown">
                 <li className="nav">
@@ -52,7 +55,7 @@ class Nav extends Component {
             </li>
           }
 
-          {address !== null &&
+          {address !== undefined &&
             <li className="nav"><a href="#">Passengers</a>
               <ul className="nav dropdown">
                 <li className="nav">
@@ -76,7 +79,7 @@ class Nav extends Component {
 
 function mapStateToProps ({ contract }) {
   return {
-    address: contract ? contract.address : null
+    address: contract ? contract.address : undefined
   }
 }
 

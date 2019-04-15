@@ -37,14 +37,15 @@ To view dapp:
 
 `http://localhost:8000`
 
-## Develop Server
+## Run Server
 
 `npm run server`
-`truffle test ./test/oracles.js`
 
-## Deploy
+## Run App
 
-To build dapp for prod:
+`npm run dapp`
+
+## To build dapp for prod:
 `npm run dapp:prod`
 
 Deploy the contents of the ./dapp folder
@@ -61,8 +62,6 @@ Deploy the contents of the ./dapp folder
 * [Ethereum Blockchain Explorer](https://etherscan.io/)
 * [Web3Js Reference](https://github.com/ethereum/wiki/wiki/JavaScript-API)
 
-
-
 #Installing Demo Contract
 
 ## Create a test contract
@@ -76,17 +75,13 @@ Take note of the contract address e.g.
         Policy Purchase
         ✓ Buy Policy (1482ms)...
 
-On the home page, click 'Load Existing Contract'.
-Complete the form by entering
-    App Contract Address
-    Click Load Contracts
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/LoadContract.png?raw=true "Load Contract")
-    ![alt text](https://github.com/aosanya/flightSurety/blob/master/Screenshots/LoadedContract.png?raw=true "Loaded Contract")
+### Update Configs For Test
+Copy the Test App and Data addresses and change the Dapp config file and the Server Config file accordingly. The config files are as mentioned.
+src/dapp/config.json
+src/server/config.json
 
-This will load the contract and avail more menu options.
-
-### Start Oracle Server
-Update the src/server/config.json with the Test Addresses. The server should reload,replay the test events and listen for new calls.
+Restart the Dapp and server to make sure the changes have taken effect. Usually they should hot reload.
+To prove that the Demo has been loaded; load the Airlines Summary(see instructions below), you should have 4 airlines registered.
 
 # Demo Test Data
 

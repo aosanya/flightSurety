@@ -13,8 +13,20 @@ class CurrentContract extends Component {
 }
 
 function mapStateToProps ({ contract }) {
+  console.log(contract)
+  var msg = "No contract loaded."
+  if (contract !== null){
+    console.log(contract.address)
+    if (contract.address == undefined){
+      msg = "Loading contract, please wait..."
+    }
+    else{
+      msg = contract.address;
+    }
+  }
+
   return {
-    address: contract ? contract.address : "No contract loaded."
+    address: msg
   }
 }
 

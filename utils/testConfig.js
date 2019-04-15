@@ -4,6 +4,7 @@ var FlightSuretyData = artifacts.require("FlightSuretyData");
 var BigNumber = require('bignumber.js');
 const Web3 = require('web3')
 
+
 var Config = async function(accounts) {
 
     // These test addresses are useful when you need to add
@@ -27,8 +28,12 @@ var Config = async function(accounts) {
     let flightSuretyData = await FlightSuretyData.new();
     let flightSuretyApp = await FlightSuretyApp.new(flightSuretyData.address);
 
+    console.log("FlightSuretyData Address is : " + flightSuretyData.address)
+    console.log("FlightSuretyApp Address is : " + flightSuretyApp.address)
+
     //Um gottes will. Make the web3 function for different providers
     const web3 = new Web3(Web3.givenProvider)
+
 
 
     //console.log("Contract Address is : " + flightSuretyApp)

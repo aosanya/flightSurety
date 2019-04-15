@@ -1,4 +1,4 @@
-import Config from '../../../utils/config.json';
+import Config from '../config.json';
 import DemoData from '../utils/DemoData.json';
 import web3Utils from '../../../utils/web3Utils';
 import FlightSuretyAppJson from '../../../build/contracts/FlightSuretyApp.json'
@@ -6,7 +6,6 @@ import FlightSuretyDataJson from '../../../build/contracts/FlightSuretyData.json
 
 export default class ContractApp {
     constructor(callback) {
-        console.log("test1")
         //let config = Config[network];
         //this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
         // this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
@@ -54,7 +53,7 @@ export default class ContractApp {
         await this.initContract(callback);
         await this.initializeDemo()
 
-        callback(this)
+
     }
 
     async initContract(callback) {
@@ -66,8 +65,14 @@ export default class ContractApp {
         this.contracts.FlightSuretyData = TruffleContract(contractDataArtifact);
         this.contracts.FlightSuretyData.setProvider(this.web3Provider);
 
-        await this.fetchEvents(null);
-       }
+        await this.loadConfigContract(callback)
+        //await this.fetchEvents(null);
+    }
+
+    async loadConfigContract(callBack){
+        let config = Config['localhost'];
+        this.loadContract(config.appAddress, callBack)
+    }
 
     async initializeDemo() {
         this.demoData.flights.push({"airline" : DemoData.AirlineAddresses[0], "flightNumber" : "AA001", "time" : new Date(2019,0,1,8,0) / 1000, key : "0xcbaa35fdc6f4b18e88d9ed55d4934a2b7d6c9c1d9a348db3f6f133d3d9bf4c65"})
@@ -136,9 +141,7 @@ export default class ContractApp {
     }
 
     async loadContract(contractAppAddress, callback) {
-        console.log("test2")
         this.contracts.FlightSuretyApp.at(contractAppAddress).then(function(instance) {
-            console.log("test3")
             callback(instance)
         }).catch(function(err) {
             console.log("error here")
