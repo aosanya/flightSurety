@@ -4,10 +4,11 @@ var mnemonic = "candy maple cake sugar pudding cream honey rich smooth crumble s
 module.exports = {
   networks: {
     development: {
-      host: "127.0.0.1",
-      port: 8545,
-      network_id: "*" // Match any network id
-    },
+      host: "127.0.0.1",     // Localhost (default: none)
+      port: 8545,            // Standard Ethereum port (default: none)
+      network_id: "*",
+      gas: 9999999
+    }
   },
   compilers: {
     solc: {

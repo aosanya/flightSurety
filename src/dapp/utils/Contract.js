@@ -28,25 +28,26 @@ export default class ContractApp {
         console.log("loading app")
         // Find or Inject Web3 Provider
         /// Modern dapp browsers...
-        if (window.ethereum) {
-            this.web3Provider = window.ethereum;
-            try {
-                // Request account access
-                await window.ethereum.enable();
-            } catch (error) {
-                // User denied account access...
-                console.error("User denied account access")
-            }
-        }
-        // Legacy dapp browsers...
-        else if (window.web3) {
-            this.web3Provider = window.web3.currentProvider;
-        }
-        // If no injected web3 instance is detected, fall back to Ganache
-        else {
+
+        // if (window.ethereum) {
+        //     this.web3Provider = window.ethereum;
+        //     try {
+        //         // Request account access
+        //         await window.ethereum.enable();
+        //     } catch (error) {
+        //         // User denied account access...
+        //         console.error("User denied account access")
+        //     }
+        // }
+        // // Legacy dapp browsers...
+        // else if (window.web3) {
+        //     this.web3Provider = window.web3.currentProvider;
+        // }
+        // // If no injected web3 instance is detected, fall back to Ganache
+        // else {
             this.web3Provider = new Web3.providers.HttpProvider(Config.localhost.url);
             console.log('Loaded Ganache')
-        }
+        //}
 
         this.web3 = new Web3(this.web3Provider);
         await this.getMetaskAccountID(callback);

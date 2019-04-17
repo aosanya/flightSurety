@@ -45680,12 +45680,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0x04DBc62503bC2a53a1A11aa7917cE66B36B57621",
-      "transactionHash": "0x7dbd3304b3a8c3c1a68f792284dffde2782a0ad3fce3cef7a550e8baafa990a8"
+      "address": "0xB529f14AA8096f943177c09Ca294Ad66d2E08b1f",
+      "transactionHash": "0x9c39402c766cd1068677927b5346bf0eeeb5e302e8d0a93b1af0386ff59e3199"
     }
   },
   "schemaVersion": "3.0.5",
-  "updatedAt": "2019-04-15T18:03:01.220Z",
+  "updatedAt": "2019-04-17T18:59:40.008Z",
   "devdoc": {
     "methods": {
       "buy(address,bytes32,string)": {

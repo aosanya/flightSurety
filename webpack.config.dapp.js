@@ -48,7 +48,7 @@ module.exports = {
   },
   devServer: {
     contentBase: path.join(__dirname, "dapp"),
-    port: 8002,
+    port: 8000,
     stats: "minimal",
     // must be `true` for SPAs
     historyApiFallback: true,
